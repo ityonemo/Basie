@@ -9,6 +9,7 @@ Gem::Specification.new do |s|
 
   # Include everything in the lib folder
   s.files = Dir['lib/**/*']
+  s.license = 'MIT'
 
   # Supress the warning about no rubyforge project
   s.rubyforge_project = 'nowarning'
