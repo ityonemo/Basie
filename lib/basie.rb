@@ -6,30 +6,47 @@ require 'stringio'
 
 #basie components.
 require_relative "table"
+require_relative "column"
 
 #basie is an environment that handles access to a database.
 class Basie
-	def login; @dblogin; end
-	def pass; @dbpass; end
-	def host; @dbhost; end
-	def name; @dbname; end
-	def db; @db; end
+	#full access objects
+	attr_accessor :settings
+
+	#half-access objects
+	attr_reader :login
+	attr_reader :pass
+	attr_reader :host
+	attr_reader :name
+	attr_reader :db
+	attr_reader :tables
 
 	def initialize(params)
-		@dblogin = params[:login] || "www-data"
-		@dbpass = params[:pass] || ""
-		@dbhost = params[:host] || "localhost"
-		@dbname = params[:name] || raise(ArgumentError, "database name required!")
+		@login = params[:login] || "www-data"
+		@pass = params[:pass] || ""
+		@host = params[:host] || "localhost"
+		@name = params[:name] || raise(ArgumentError, "database name required!")
+
+		#create a blank settings object.
+		@settings = {}
+		#allow one to pass the root and tabledir settings directly into the constructor.
+		@settings[:root] = params[:root] ? params[:root] : Dir.pwd
+		@settings[:tabledir] = File.join(@settings[:root], (params[:tabledir] ? params[:tabledir] : "/tables"))
+
+		#create a blank tables object.
+		@tables = {}
 	end
 
 	def connect()
 		#connects to a database.  Sets the internal db variable to the connection.
-		@db = Sequel.mysql(@dbname, :user => @dblogin, :password => @dbpass, :host => @dbhost)
+		@db = Sequel.mysql(@name, :user => @login, :password => @pass, :host => @host)
+
+		#please consider using the block form of this function to ensure database disconnection and resource retrieval
 		if block_given?
 			begin
-				yield
+				yield @db
 			ensure
-				@db.disconnect
+				disconnect
 			end
 		end
 	end
@@ -37,27 +54,32 @@ class Basie
 	def disconnect
 		#disconnects from the database.
 		@db.disconnect
+		@db = nil
 	end
 
 	#creates a table using a basie-style definition
-	def create(sym, file = nil)
+	def create(sym, params = {})
 		#check the input.
 		unless (Symbol === sym)
 			raise(ArgumentError, "first argument to create must be a symbol")
 		end
 
+		params[:basie] = self
+
 		#return the new tables created.  Note that this will use the definition of table (as created below.)
-		case file
-		when File
-			Basie::Table.new sym, file
-		when String
-			Basie::Table.new sym, StringIO.new(file)
-		when NilClass
-			#create the path based on our sinatra setting.
-			path = "#{File.dirname(__FILE__)}/tables/#{sym}.basie"
-			Basie::Table.new sym, File.new(path)
+		if (File === params[:file])
+			#check to see if we're delivering a file directly
+			Basie::Table.new sym, params[:file].read, params
+		elsif (String === params[:path])
+			#are we delivering a path string?
+			Basie::Table.new sym, File.new(params[:path]).read, params
+		elsif (String === params[:definition])
+			#are we delivering a definition directly?
+			Basie::Table.new sym, params[:definition], params
 		else
-			raise(ArgumentError, "attempting to create a table with an odd second input")
+			#create the path based on our internal setting.
+			path = File.join(@settings[:tabledir],"#{sym}.basie")
+			Basie::Table.new sym, File.new(path).read, params
 		end
 	end
 end

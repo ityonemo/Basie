@@ -1,17 +1,19 @@
 #table.rb
 #contains the Table class which handles table definitions.
 
-#forward the existence of the basie class.
-class Basie
-end
+#forward the existence of the Basie class.
+class Basie; end
+
+#forward the existence of the Basie Column class.
+class Basie::Column; end
 
 #define the basie table class.
 class Basie::Table
-	#half-accessor methods
-	def name; @name; end
-	def properties; @properties; end
-	def foreignkeys; @foreignkeys; end
-	def searchcolumns; @searchcolumns; end
+	attr_reader :name
+	attr_reader :settings
+	attr_reader :columns
+	attr_reader :foreignkeys
+	attr_reader :searchcolumns
 
 	#def columns(opt = nil)
 	#	if (@properties[:use_hash] || (opt == :all))
@@ -21,53 +23,89 @@ class Basie::Table
 	#	end
 	#end
 
-	def initialize(name, tableio)
+	def initialize(name, init_txt, params = {})
+		#check to make sure our arguments are all right.
+		unless (Symbol === name) && (String === init_txt) && (Hash === params)
+			raise ArgumentError, "incorrect arguments for initializing a table"
+		end
+
+		#cache a link to the parent basie object
+		@basie = params[:basie]
+		unless (Basie === @basie)
+			raise ArgumentError, "failure to pass the parent Basie object"
+		end
+
 		#store the name.
-		@name = name.to_sym
-		#initialize a blank properties object.
-		@properties = {}
+		@name = name
+		#initialize a (usually blank) properties object.
+		@settings = params
 		#initialize a blank columns hash
 		@columns = {}
 		#initialize a foreign keys array
 		@foreignkeys = {}
 		@searchcolumns = nil
+
+		#then realize the input
+		realize init_txt
+
+		#connect to the database, then create the database entries.
+		@basie.connect do |db|
+			#check to see if the table exists.
+			if (db.table_exists?(name))
+				#FOR NOW, DO NOTHING.  IN THE FUTURE, PARSE INITIALIZATION TEXT AND ADJOIN DATA
+				#TO THE EXISTING DATABASE.
+			else
+		    	#generate an initialization command that we will execute on the database.
+    			init_cmd = "db.create_table?(:#{name}) do\n#{init_txt}\nend"	#generate the command
+    			eval(init_cmd)													#execute it.
+			end
+		end
+		#save this object to basie
+		@basie.tables[name] = self
 	end
 
-	#	lineindex = 1
-	#	tabletext.each_line do |line|
-			#is this line strictly a comment line?
-	#		if (line.strip[0] == "#")
-				#is it the first line?  It may be a properties annotation.
-	#			if (lineindex == 1)
-					#turn all of the elements in this line into things in the properties
-					#TODO:  change the regexp to only grab hashtagged things.
-	#				line.split.map{|e| e[/\w+/]}.compact.each do |e|
-	#					@properties[e.to_sym] = true
-	#				end
-	#			end
+	def realize(init_txt)
+		#comments in the header may be settings.
+		header = true
+		init_txt.each_line do |line|
+			#save the line with beginning and ending whitespace removed.
+			sline = line.strip
+			#skip blank lines
+			if sline.length == 0
+				next
+			end
+			#check to see if we are strictly a comment line
+			if (sline[0] == "#")
+				#parse as if it is a settings
+				if header
+					#parse_setting sline
+				end
+			else
+				#we are no longer in the header, and there is content.
+				header = false
+				parse_column sline
+			end
+		end
+	end
+	private :realize
 
-				#check for a searchable tag, then assign the searchcolumns.
-	#			checkstring = line.split("#")[1]
-	#			if (checkstring[0..9] == "searchable")
-	#				@searchcolumns = (checkstring.split)[1..-1]
-	#			end
-	#		end
+	def parse_setting(line)
+	end
+	private :parse_setting
 
-			#either way scan the line 
-	#		cl = BasieColumn.new(line)
-	#		if (cl.has_content?)
-	#			@columns[cl.name.to_sym] = cl
-	#			if (cl.type == "foreign_key")
-					#set up the foreign key.
-	#				@foreignkeys[cl.name.to_sym] = line.split[2][/\w+/].to_sym
-	#			end
-	#		end
+	def parse_column(line)
+		#scan the line.
+		cl = Basie::Column.new line
 
-	#		lineindex += 1
-	#	end
+		#check to make sure this wasn't a blank line with no content.
+		@columns[cl.name] = cl
+		#if this column is a foreign key column, then add it to the foreign key list.
+		if (cl.type == "foreign_key")
+			foreignkeys[cl.name] = cl.params[0].to_sym
+		end
+	end
+	private :parse_column
 
-	#	@initializer = tabletext
-	#end
 
 	#def columns_select(opt = nil)
 		#generates a select statement that has appropriate substitutions for hash selected columns.
