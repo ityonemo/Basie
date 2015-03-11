@@ -1,0 +1,14 @@
+<table>
+  <tr>
+    <th>id</th>
+    <th>test</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>one</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>two</td>
+  </tr>
+</table>

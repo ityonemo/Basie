@@ -1,10 +1,9 @@
 require_relative "base_interpreter"
 
-#JSON intrepreter, should be the root class for all Basie interpreters.
+#A JSON intrepreter for basie.
 class Basie::JSONInterpreter < Basie::Interpreter
 
-	def initialize
-		#TODO:  Consider re-initializing the route name here.
+	def initialize(params={})
 		@route = "/json"
 
 		#register the JSON mime type with the application.
@@ -12,7 +11,7 @@ class Basie::JSONInterpreter < Basie::Interpreter
   			app.mime_type :json, 'application/json'
   		end
 
-		super
+		super(params)
 	end
 
 	#JSON does nothing special for the table and column readings.  So we may skip directly to:
@@ -30,13 +29,8 @@ class Basie::JSONInterpreter < Basie::Interpreter
 		#register a path to the table.
 		app.get (fullroute) do
 			content_type :json
-			
-			table.basie.connect do |db|
-				#TODO:  Do a permissions check here.
 
-				#figure out how to deal with this thing.
-				db.fetch("SELECT * FROM #{table.name}").all.to_json
-			end
+			table.entire_table.to_json
 		end
 
 		#register a path to individual table data

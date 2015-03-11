@@ -15,7 +15,13 @@ class Basie::Interpreter
 	end
 
 	#a skeleton constructor makes sure this winds up in the interpreter list.
-	def initialize
+	def initialize(params = {})
+
+		#allow the user to set the route as an override to whatever default is set by the constructor
+		if params.has_key?(:route)
+			@route = params[:route]
+		end
+
 		@@interpreters.push self
 	end
 

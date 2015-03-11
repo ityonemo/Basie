@@ -1,5 +1,10 @@
 #table_accessors.rb
 #adds additional, common table accessor features to the table class.
+#segregated from the main Basie::Table object for code organization purposes.
+
+#forward the existence of the Basie class
+
+class Basie; end
 
 class Basie::Table 
 	def entire_table

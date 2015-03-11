@@ -9,7 +9,7 @@ require_relative "table"
 require_relative "column"
 require_relative "base_interpreter"
 require_relative "json_interpreter"
-#require_relative "html_interpreter"
+require_relative "html_interpreter"
 #require_relative "csv_interpreter"
 
 #basie is an environment that handles access to a database.
@@ -96,5 +96,5 @@ end
 
 #by default, activate several different Basie interpreters.
 Basie::JSONInterpreter.new
-#Basie::HTMLInterpreter.new
+Basie::HTMLInterpreter.new
 #Basie::CSVInterpreter.new

@@ -1,6 +1,7 @@
 #table.rb
 #contains the Table class which handles table definitions.
 
+#include table accessors methods.
 require_relative 'table_accessors'
 
 #forward the existence of the Basie class.
