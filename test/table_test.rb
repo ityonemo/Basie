@@ -55,16 +55,22 @@ class TableTest < Test::Unit::TestCase
     simpletest_tests(bs)
   end
 
-  def test_create_table_passing_file
-    bs = Basie.new :name => "testdb"
-  end
-
   def test_create_table_passing_path
     bs = Basie.new :name => "testdb"
+    bs.create :simpletest, :path => File.join(Dir.pwd, "tables/simpletest.basie")
+    simpletest_tests(bs)
+  end
+
+  def test_create_table_passing_file
+    bs = Basie.new :name => "testdb"
+    bs.create :simpletest, :file => File.new(File.join(Dir.pwd, "tables/simpletest.basie"))
+    simpletest_tests(bs)
   end
 
   def test_create_table_passing_string
     bs = Basie.new :name => "testdb"
+    bs.create :simpletest, :definition => File.new(File.join(Dir.pwd, "tables/simpletest.basie")).read
+    simpletest_tests(bs)
   end
 
 end

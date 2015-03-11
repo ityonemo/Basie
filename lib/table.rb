@@ -1,6 +1,8 @@
 #table.rb
 #contains the Table class which handles table definitions.
 
+require_relative 'table_accessors'
+
 #forward the existence of the Basie class.
 class Basie; end
 
@@ -14,6 +16,7 @@ class Basie::Table
 	attr_reader :columns
 	attr_reader :foreignkeys
 	attr_reader :searchcolumns
+	attr_reader :basie
 
 	#def columns(opt = nil)
 	#	if (@properties[:use_hash] || (opt == :all))
@@ -46,7 +49,7 @@ class Basie::Table
 		@searchcolumns = nil
 
 		#then realize the input
-		realize init_txt
+		analyze init_txt
 
 		#connect to the database, then create the database entries.
 		@basie.connect do |db|
@@ -54,6 +57,9 @@ class Basie::Table
 			if (db.table_exists?(name))
 				#FOR NOW, DO NOTHING.  IN THE FUTURE, PARSE INITIALIZATION TEXT AND ADJOIN DATA
 				#TO THE EXISTING DATABASE.
+
+				#create a warning about overwriting table name.
+				$stderr.puts("Warning: modifying the existing table #{name}")
 			else
 		    	#generate an initialization command that we will execute on the database.
     			init_cmd = "db.create_table?(:#{name}) do\n#{init_txt}\nend"	#generate the command
@@ -64,7 +70,9 @@ class Basie::Table
 		@basie.tables[name] = self
 	end
 
-	def realize(init_txt)
+	#the analyze directive takes the sequel initialization file, together with
+	#any comments, and turns it into the basie internal model.
+	def analyze(init_txt)
 		#comments in the header may be settings.
 		header = true
 		init_txt.each_line do |line|
@@ -87,7 +95,7 @@ class Basie::Table
 			end
 		end
 	end
-	private :realize
+	private :analyze
 
 	def parse_setting(line)
 	end
@@ -105,7 +113,6 @@ class Basie::Table
 		end
 	end
 	private :parse_column
-
 
 	#def columns_select(opt = nil)
 		#generates a select statement that has appropriate substitutions for hash selected columns.
