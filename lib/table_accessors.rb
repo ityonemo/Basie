@@ -17,4 +17,18 @@ class Basie::Table
 			db.fetch("SELECT * FROM #{@name}").all
 		end
 	end
+
+	def table_by_id(id)
+		#returns the table data by row id (primary key)
+		@basie.connect do |db|
+			db.fetch("SELECT * FROM #{@name} WHERE id = '#{id}'").first
+		end
+	end
+
+	def table_by_hash(hash)
+		#returns the table data by hash (secondary key)
+		@basie.connect do |db|
+			db.fetch("SELECT * from #{@name} WHERE hash = '#{hash}'").first
+		end
+	end
 end

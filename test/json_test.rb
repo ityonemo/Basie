@@ -19,7 +19,7 @@ class JSONTest < Test::Unit::TestCase
 
     create_simpletest
 
-    #run the damn thing
+    #get the whole table
     get('/json/simpletest')
 
     #assertions about what the route we just triggered
@@ -28,5 +28,19 @@ class JSONTest < Test::Unit::TestCase
     #remember, JSON.parse does NOT assign keys of Javascript hashes to symbols
     #associative arrays are, instead, assigned to strings.
     assert_equal last_response.body, File.new("./results/simpletest.json").read
+  end
+
+  def test_id_query_route
+    create_simpletest
+
+    #get just one line
+    get ('json/simpletest/1')
+
+    #assertions about what the route we just triggered
+    assert last_response.ok?
+    #check the resulting data after a JSON parse.
+    #remember, JSON.parse does NOT assign keys of Javascript hashes to symbols
+    #associative arrays are, instead, assigned to strings.
+    assert_equal last_response.body, '{"id":1,"test":"one"}'
   end
 end

@@ -33,6 +33,12 @@ class Basie::JSONInterpreter < Basie::Interpreter
 			table.entire_table.to_json
 		end
 
+		app.get (fullroute + '/:query') do |query|
+			content_type :json
+
+			table.table_by_id(query).to_json
+		end
+
 		#register a path to individual table data
 #		get (fullroute + '/:query') do |query|
 #			content_type :json
