@@ -44,18 +44,4 @@ class ColumnTest < Test::Unit::TestCase
   	assert_equal(cl.params[:htag], :checkbox)
   end
 
-  def test_column_integer_suppression
-  	cl = Basie::Column.new("Integer :test 		#suppress")
-  	assert_equal(cl.name, :test)
-  	assert_equal(cl.type, :integer)
-  	assert_equal(cl.params[:htag], :suppress)
-  end
-
-  def test_column_url_htag
-  	cl = Basie::Column.new("String :test 		#url")
-  	assert_equal(cl.name, :test)
-  	assert_equal(cl.type, :varchar)
-  	assert_equal(cl.params[:htag], :url)
-  end
-
 end

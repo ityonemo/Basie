@@ -9,6 +9,26 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		super(params)
 	end
 
+	def self.to_table(data)
+		header = "%table"
+
+		#check to see if our table is going to be blank.
+		if data.length == 0 
+			return header
+		end
+
+		#add the header row which contains all of the common keys.
+		header += "\n\t%tr" + data[0].keys.map{|k| "\n\t\t%th #{k}"}.join
+		#then add all of the data rows.
+		header + data.each.map{|h| "\n\t%tr" + h.values.map{|v| "\n\t\t%td #{v}"}.join}.join
+	end
+
+	def self.to_dl(data)
+		#convert a single hash data into a dl.
+		#set up the output.
+		"%dl" + data.keys.map{|k| "\n\t%dt #{k}\n\t%dd #{data[k]}"}.join
+	end
+
 	@@htaghash = {
 		#custom htags as defined by comments
 		"tel" 			=> :tel,
@@ -57,32 +77,21 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 
 		#register a path to the table.
 		app.get (fullroute) do
-
 			#get the data
 			res = table.entire_table
+			haml Basie::HTMLInterpreter.to_table(res)
+		end
 
-			#set up the output.
-			o = "%table"
+		app.get (fullroute + "/:query") do |query|
+			#get the data
+			res = table.data_by_id(query)
+			haml Basie::HTMLInterpreter.to_dl(res)
+		end
 
-			#check to see if we have a null table.
-			if res.length == 0
-				#then return an empty table.
-				return haml o
-			end
-			
-			#get the column names from the first row
-			o += "\n\t%tr"
-
-			#populate the header row
-			res[0].each_key{|k| o += "\n\t\t%th #{k}"}
-
-			#populate the data rows
-			res.each do |entry|
-				o += "\n\t%tr"
-				entry.each_value{|v| o+= "\n\t\t%td #{v}"}
-			end
-
-			haml o
+		app.get (fullroute + "/:column/:query") do |column, query|
+			#get the data
+			res = table.data_by_query(column, query)
+			haml Basie::HTMLInterpreter.to_dl(res)
 		end
 	end
 end
