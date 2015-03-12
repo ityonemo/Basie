@@ -30,7 +30,9 @@ class Basie::Column
 
 		@type = type_of(dbtokens)
 		@name = dbtokens[1][/\w+/].to_sym
-		@params = params_of(comments)
+
+		@params = {}
+		set_params(comments)
 
 		#other consistency checks.
 		#first, primary key should have name id.
@@ -88,49 +90,11 @@ class Basie::Column
 	end
 	private :type_of
 
-	@@htaghash = {
-		#custom htags as defined by comments
-		"tel" 			=> :tel,
-		"url" 			=> :url,
-		"email" 		=> :email,
-		"suppress" 		=> :suppress,	#note that there is no "suppress" type in the standard HTML lexicon.
-		"hash" 			=> :suppress,
-		"options" 		=> :option,
-		"picker" 		=> :picker,
-		#as defined by type
-		:integer		=> :number,
-        :bigint			=> :number,
-        :numeric		=> :number,
-        :date			=> :date,
-        :timestamp		=> :datetime,
-        :varchar		=> :text,
-        :char			=> :text,
-        :foreign_key	=> :text,
-        :text			=> :textarea,
-        :boolean		=> :checkbox,
-        :blob			=> :file
-	}
-
-	def params_of(comments)
-		params = {}
-		comments.each do |statement|
-			#strip the statement.
-			statement.strip!
-
-			puts statement
-
-			#check to see if this is an htag statement.
-			if @@htaghash.has_key?(statement)
-				params[:htag] = @@htaghash[statement]
-			end
+	def set_params(comments)
+		#pass all comments to the interpreters
+		Basie::Interpreter.interpreters.each do |interpreter|
+			interpreter.parse_for_column(self, comments)
 		end
-
-		#set a default htag parameter based on the current type of the object.
-		unless params[:htag]
-			params[:htag] = @@htaghash[@type]
-		end
-
-		params
 	end
-	private :params_of
+	private :set_params
 end

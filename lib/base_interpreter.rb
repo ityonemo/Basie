@@ -30,7 +30,7 @@ class Basie::Interpreter
 	def parse_for_table(table, table_comment); end
 
 	#gives you a context in which you can parse a column's content
-	def parse_for_column(column, column_comment); end
+	def parse_for_column(column, column_comments); end
 
 	def setup_paths(table); end
 end

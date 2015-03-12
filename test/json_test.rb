@@ -16,7 +16,6 @@ class JSONTest < Test::Unit::TestCase
 
   #test the basic route
   def test_fulltable_route
-
     create_simpletest
 
     #get the whole table
@@ -34,7 +33,23 @@ class JSONTest < Test::Unit::TestCase
     create_simpletest
 
     #get just one line
-    get ('json/simpletest/1')
+    get('/json/simpletest/1')
+
+    #assertions about what the route we just triggered
+    assert last_response.ok?
+    #check the resulting data after a JSON parse.
+    #remember, JSON.parse does NOT assign keys of Javascript hashes to symbols
+    #associative arrays are, instead, assigned to strings.
+    assert_equal last_response.body, '{"id":1,"test":"one"}'
+  end
+
+  def test_specific_query_route
+    create_simpletest
+
+    #get one line where we've preselected the data
+
+    #get just one line
+    get('/json/simpletest/test/one')
 
     #assertions about what the route we just triggered
     assert last_response.ok?

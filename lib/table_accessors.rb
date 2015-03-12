@@ -3,7 +3,6 @@
 #segregated from the main Basie::Table object for code organization purposes.
 
 #forward the existence of the Basie class
-
 class Basie; end
 
 class Basie::Table 
@@ -18,17 +17,33 @@ class Basie::Table
 		end
 	end
 
-	def table_by_id(id)
+	def data_by_id(id)
 		#returns the table data by row id (primary key)
 		@basie.connect do |db|
 			db.fetch("SELECT * FROM #{@name} WHERE id = '#{id}'").first
 		end
 	end
 
-	def table_by_hash(hash)
+	def data_by_hash(hash)
 		#returns the table data by hash (secondary key)
 		@basie.connect do |db|
 			db.fetch("SELECT * from #{@name} WHERE hash = '#{hash}'").first
+		end
+	end
+
+	def data_by_search(search)
+		#returns table data by default search key.
+		@basie.connect do |db|
+			#generate the search column text
+			searchcol = ""
+			db.fetch("SELECT * from #{@name} WHERE #{searchcol} = '#{search}'").first
+		end
+	end
+
+	def data_by_query(column, query)
+		#returns table data by general column query
+		@basie.connect do |db|
+			db.fetch("SELECT * from #{@name} WHERE #{column} = '#{query}'").first
 		end
 	end
 end

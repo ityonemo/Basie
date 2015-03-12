@@ -9,6 +9,42 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		super(params)
 	end
 
+	@@htaghash = {
+		#custom htags as defined by comments
+		"tel" 			=> :tel,
+		"url" 			=> :url,
+		"email" 		=> :email,
+		"suppress" 		=> :suppress,	#note that there is no "suppress" type in the standard HTML lexicon.
+		"hash" 			=> :suppress,
+		"options" 		=> :option,
+		"picker" 		=> :picker,
+		#as defined by type
+		:integer		=> :number,
+        :bigint			=> :number,
+        :numeric		=> :number,
+        :date			=> :date,
+        :timestamp		=> :datetime,
+        :varchar		=> :text,
+        :char			=> :text,
+        :foreign_key	=> :text,
+        :text			=> :textarea,
+        :boolean		=> :checkbox,
+        :blob			=> :file
+	}
+
+	def parse_for_column(column, columnsettings)
+
+		columnsettings.each do |statement|
+			#check to see if this is an htag statement.
+			if @@htaghash.has_key?(statement)
+				column.params[:htag] = @@htaghash[statement]
+			end
+		end
+
+		#set a default htag parameter based on the current type of the object.
+		column.params[:htag] = column.params[:htag] || @@htaghash[column.type]
+	end
+
 	def setup_paths(table)
 		#table should be a symbol to the name of the table.
 		fullroute = "#{@route}/#{table.name}"
