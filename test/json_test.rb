@@ -14,6 +14,10 @@ class JSONTest < Test::Unit::TestCase
     Sinatra::Application
   end
 
+  def setup
+    Basie.interpret :JSON
+  end
+
   #test the basic route
   def test_fulltable_route
     create_simpletest
@@ -23,10 +27,7 @@ class JSONTest < Test::Unit::TestCase
 
     #assertions about what the route we just triggered
     assert last_response.ok?
-    #check the resulting data after a JSON parse.
-    #remember, JSON.parse does NOT assign keys of Javascript hashes to symbols
-    #associative arrays are, instead, assigned to strings.
-    assert_equal last_response.body, File.new("./results/simpletest.json").read
+    assert_equal File.new("./results/simpletest.json").read, last_response.body
   end
 
   def test_id_query_route
@@ -40,7 +41,7 @@ class JSONTest < Test::Unit::TestCase
     #check the resulting data after a JSON parse.
     #remember, JSON.parse does NOT assign keys of Javascript hashes to symbols
     #associative arrays are, instead, assigned to strings.
-    assert_equal last_response.body, '{"id":1,"test":"one"}'
+    assert_equal '{"id":1,"test":"one"}', last_response.body
   end
 
   def test_specific_query_route
@@ -56,6 +57,6 @@ class JSONTest < Test::Unit::TestCase
     #check the resulting data after a JSON parse.
     #remember, JSON.parse does NOT assign keys of Javascript hashes to symbols
     #associative arrays are, instead, assigned to strings.
-    assert_equal last_response.body, '{"id":1,"test":"one"}'
+    assert_equal '{"id":1,"test":"one"}', last_response.body
   end
 end

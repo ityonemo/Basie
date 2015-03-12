@@ -25,6 +25,57 @@ class Basie
 	attr_reader :db
 	attr_reader :tables
 
+	##########################################################################3
+	## MANAGEMENT OF INTERPRETERS
+
+	#a list of interpreters that we're using.
+	@@interpreters = []
+	#and a half-accessor for that.
+	def self.interpreters; @@interpreters; end
+	#purge clears out the interpreters, but this should only be useful during debug phase.
+	def self.purge_interpreters; @@interpreters = []; end
+
+
+	#the interpret directive causes Basie to activate an interpreter object.
+	def self.interpret(what, params = {})
+		#use a little bit of reflection to instantiate basie interpreter.
+		case what
+		when Symbol
+			stxt = what.to_s[/\w+/]
+			#check to see if it is an internal class.
+			if eval("defined? Basie::#{stxt}Interpreter")
+				c = eval("Basie::#{stxt}Interpreter")
+			elsif eval("defined? #{stxt}")
+				c = eval(what.to_s)
+			else
+				raise ArgumentError, "#{stxt} does not exist."
+			end
+
+			unless Class === c
+				raise ArgumentError, "#{stxt} is not a class."
+			end
+
+			unless c.superclass == Basie::Interpreter
+				raise ArgumentError, "class #{stxt} is not an interpreter."
+			end
+
+			#instantiate the class
+			c.new params
+		when Class 
+			if what.superclass == Basie::Interpreter
+				what.new params
+			else
+				raise ArgumentError, "class #{what} is not an interpreter."
+			end
+		else
+			raise ArgumentError, "unknown what"
+		end
+	end
+
+	#########################################################################3
+	## MANAGEMENT OF TABLES
+
+	#creating a new basie object.
 	def initialize(params)
 		@login = params[:login] || "www-data"
 		@pass = params[:pass] || ""
@@ -88,13 +139,8 @@ class Basie
 				end
 
 		#now, register with the interpreters.
-		Basie::Interpreter.interpreters.each do |interpreter|
+		Basie.interpreters.each do |interpreter|
 			interpreter.setup_paths(table)
 		end
 	end
 end
-
-#by default, activate several different Basie interpreters.
-Basie::JSONInterpreter.new
-Basie::HTMLInterpreter.new
-Basie::CSVInterpreter.new

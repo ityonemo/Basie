@@ -15,6 +15,10 @@ class CSVTest < Test::Unit::TestCase
     Sinatra::Application
   end
 
+  def setup
+    Basie.interpret :CSV
+  end
+
   #test the basic route
   def test_fulltable_route
 
@@ -25,7 +29,7 @@ class CSVTest < Test::Unit::TestCase
 
     #assertions about what the route we just triggered
     assert last_response.ok?
-    assert_equal last_response.body, File.new("./results/simpletest.csv").read
+    assert_equal File.new("./results/simpletest.csv").read, last_response.body
   end
 
   def test_id_query_route
@@ -36,19 +40,18 @@ class CSVTest < Test::Unit::TestCase
 
     #assertions about what the route we just triggered
     assert last_response.ok?
-    assert_equal last_response.body, "\"id\",\"test\"\n\"1\",\"one\"\n"
+    assert_equal "\"id\",\"test\"\n\"1\",\"one\"\n", last_response.body
   end
 
   def test_specific_query_route
     create_simpletest
 
     #get one line where we've preselected the data
-
     #get just one line
     get('/csv/simpletest/test/one')
 
     #assertions about what the route we just triggered
     assert last_response.ok?
-    assert_equal last_response.body, "\"id\",\"test\"\n\"1\",\"one\"\n"
+    assert_equal "\"id\",\"test\"\n\"1\",\"one\"\n", last_response.body
   end
 end

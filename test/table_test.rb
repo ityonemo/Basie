@@ -31,15 +31,15 @@ class TableTest < Test::Unit::TestCase
 
   def simpletest_tests(bs)
     #check to see if our internal description is correct.
-    assert_equal(bs.tables.keys, [:simpletest])
-    assert_equal(bs.tables[:simpletest].columns.keys, [:id, :test])
+    assert_equal      [:simpletest],          bs.tables.keys
+    assert_equal      [:id, :test],           bs.tables[:simpletest].columns.keys
     #check to see if our database description is correct
     bs.connect do |db|
-      assert_equal(db.tables, [:simpletest])
-      assert_equal(db[:simpletest].columns, [:id, :test])
+      assert_equal    [:simpletest],          db.tables
+      assert_equal    [:id, :test],           db[:simpletest].columns
       #take down the table
       db.drop_table(:simpletest)
-      assert_equal(db.tables, [])
+      assert_equal    [],                     db.tables
     end
   end
 

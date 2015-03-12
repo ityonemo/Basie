@@ -20,18 +20,18 @@ class BasieTest < Test::Unit::TestCase
 
   def test_initialization_defaults
     bs = Basie.new :name => "testdb"
-    assert_equal(bs.login, "www-data", "default login incorrect")
-    assert_equal(bs.pass, "",  "default password incorrect")
-    assert_equal(bs.host, "localhost",  "default host incorrect")
-    assert_equal(bs.name, "testdb",  "default name incorrect")
+    assert_equal "www-data",    bs.login,   "default login incorrect"
+    assert_equal "",            bs.pass,    "default password incorrect"
+    assert_equal "localhost",   bs.host,    "default host incorrect"
+    assert_equal "testdb",      bs.name,    "default name incorrect"
   end
 
   def test_initialization_custom
     bs = Basie.new :login => "login_test", :pass => "pass_test", :host => "host_test", :name => "testdb"
-    assert_equal(bs.login, "login_test", "custom login incorrect")
-    assert_equal(bs.pass, "pass_test",  "custom password incorrect")
-    assert_equal(bs.host, "host_test",  "custom host incorrect")
-    assert_equal(bs.name, "testdb",  "custom name incorrect")
+    assert_equal  "login_test", bs.login,  "custom login incorrect"
+    assert_equal  "pass_test",  bs.pass,   "custom password incorrect"
+    assert_equal  "host_test",  bs.host,   "custom host incorrect"
+    assert_equal  "testdb",     bs.name,   "custom name incorrect"
   end
 
   #CONNECTION TESTS
@@ -61,9 +61,44 @@ class BasieTest < Test::Unit::TestCase
       bs.db[:testtable].insert({:testcolumn => "test test"})
       res = bs.db[:testtable].first
 
-      assert_equal(res[:testcolumn], "test test", "retrieved data from test brackets not correct")
+      assert_equal "test test", res[:testcolumn], "retrieved data from test brackets not correct"
 
       bs.db.drop_table :testtable
     end
   end
+
+  #TEST INTERPRETER INITIALIZATION
+  def test_default_interpreters
+    Basie.interpret :CSV
+    Basie.interpret :HTML
+    Basie.interpret :JSON
+
+    assert_equal 3, Basie.interpreters.length, "failed to find a default interpreter"
+    Basie.purge_interpreters
+  end
+
+  def test_double_interpretering
+    #the interpreter list should reject an attempt to duplicate an interpreter.
+    Basie.interpret :CSV
+    Basie.interpret :CSV
+
+    assert_equal 1, Basie.interpreters.length, "failed to not instantiate duplicate interpreters"
+    Basie.purge_interpreters
+  end
+
+  def test_try_to_interpret_nothing
+    assert_raise(ArgumentError){Basie.interpret :notaclass}
+  end
+
+  def test_try_to_interpret_bad_class
+    assert_raise(ArgumentError){Basie.interpret :String}
+  end
+
+  def test_by_class
+    Basie.interpret Basie::HTMLInterpreter
+
+    assert_equal 1, Basie.interpreters.length, "failed to instantiate an interpreter by class"
+    Basie.purge_interpreters
+  end
+
 end

@@ -22,26 +22,11 @@ class ColumnTest < Test::Unit::TestCase
 
   def test_column_primary_key
   	cl = Basie::Column.new("primary_key :id")
-  	assert_equal(cl.name, :id)
-  	assert_equal(cl.type, :primary_key)
+  	assert_equal :id, cl.name
+  	assert_equal :primary_key, cl.type
   end
 
   def test_column_primary_key_not_id
   	assert_raise(Basie::DefinitionError){cl = Basie::Column.new("primary_key :blah")}
   end
-
-  def test_column_integer_default_hash
-  	cl = Basie::Column.new("Integer :test")
-  	assert_equal(cl.name, :test)
-  	assert_equal(cl.type, :integer)
-  	assert_equal(cl.params[:htag], :number)
-  end
-
-  def test_column_boolean_default_hash
-  	cl = Basie::Column.new("boolean :test")
-  	assert_equal(cl.name, :test)
-  	assert_equal(cl.type, :boolean)
-  	assert_equal(cl.params[:htag], :checkbox)
-  end
-
 end

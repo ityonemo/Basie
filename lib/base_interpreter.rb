@@ -5,24 +5,22 @@ class Basie::Interpreter
 
 	attr_reader :route 	#this is the url route
 
-	#a list of interpreters that we're using.
-	@@interpreters = []
-	#and a half-accessor for that.
-	def self.interpreters; @@interpreters; end
-
 	def app
 		Sinatra::Application
 	end
 
 	#a skeleton constructor makes sure this winds up in the interpreter list.
 	def initialize(params = {})
-
 		#allow the user to set the route as an override to whatever default is set by the constructor
 		if params.has_key?(:route)
 			@route = params[:route]
 		end
 
-		@@interpreters.push self
+		#check to see if we've already registered this interpreter.
+		unless Basie.interpreters.any?{|i| self.class === i}
+			Basie.interpreters.push self
+		end
+		#otherwise silently fail.
 	end
 
 	#gives you a context in which you can parse parameters given to a table setting.

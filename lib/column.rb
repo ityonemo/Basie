@@ -92,7 +92,7 @@ class Basie::Column
 
 	def set_params(comments)
 		#pass all comments to the interpreters
-		Basie::Interpreter.interpreters.each do |interpreter|
+		Basie.interpreters.each do |interpreter|
 			interpreter.parse_for_column(self, comments)
 		end
 	end
