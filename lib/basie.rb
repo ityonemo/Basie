@@ -35,7 +35,6 @@ class Basie
 	#purge clears out the interpreters, but this should only be useful during debug phase.
 	def self.purge_interpreters; @@interpreters = []; end
 
-
 	#the interpret directive causes Basie to activate an interpreter object.
 	def self.interpret(what, params = {})
 		#use a little bit of reflection to instantiate basie interpreter.
@@ -141,6 +140,9 @@ class Basie
 					path = File.join(@settings[:tabledir],"#{sym}.basie")
 					Basie::Table.new sym, File.new(path).read, params
 				end
+
+		#save this object to basie's table list
+		@tables[name] = table
 
 		#now, register with the interpreters.
 		Basie.interpreters.each do |interpreter|

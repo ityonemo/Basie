@@ -58,7 +58,7 @@ class Basie::Table
 		@basie.connect do |db|
 			#check to see if the table exists.
 			if (db.table_exists?(name))
-				#FOR NOW, DO NOTHING.  IN THE FUTURE, PARSE INITIALIZATION TEXT AND ADJOIN DATA
+				#FOR NOW, DO NOTHING.  IN THE FUTURE, PARSE INITIALIZATION TEXT AND ADJOIN COLUMNS
 				#TO THE EXISTING DATABASE.
 
 				#create a warning about overwriting table name.
@@ -69,8 +69,6 @@ class Basie::Table
     			eval(init_cmd)													#execute it.
 			end
 		end
-		#save this object to basie
-		@basie.tables[name] = self
 	end
 
 	#the analyze directive takes the sequel initialization file, together with
