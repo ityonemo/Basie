@@ -97,7 +97,7 @@ class HTMLTest < Test::Unit::TestCase
 
   def test_table_id_suppression
     Basie.purge_interpreters
-    Basie.interpret :HTML, :no_table_id => true
+    Basie.interpret :HTML, :table_id => false
 
     create :simpletest
 
@@ -129,7 +129,7 @@ class HTMLTest < Test::Unit::TestCase
 
   def test_header_class_suppression
     Basie.purge_interpreters
-    Basie.interpret :HTML, :no_header_class => true
+    Basie.interpret :HTML, :header_class => false
 
     create :simpletest
     get('/html/simpletest')
@@ -270,7 +270,7 @@ class HTMLTest < Test::Unit::TestCase
 
   def test_entry_id_suppression
     Basie.purge_interpreters
-    Basie.interpret :HTML, :no_entry_id => true
+    Basie.interpret :HTML, :entry_id => false
 
     create :simpletest
 

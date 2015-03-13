@@ -116,9 +116,9 @@ class Basie
 	end
 
 	#creates a table using a basie-style definition
-	def create(sym, params = {})
+	def create(tablename, params = {})
 		#check the input.
-		unless (Symbol === sym)
+		unless (Symbol === tablename)
 			raise(ArgumentError, "first argument to create must be a symbol")
 		end
 
@@ -128,21 +128,21 @@ class Basie
 		#then set that value to the table variable.
 		table = if (File === params[:file])
 					#check to see if we're delivering a file directly
-					Basie::Table.new sym, params[:file].read, params
+					Basie::Table.new tablename, params[:file].read, params
 				elsif (String === params[:path])
 					#are we delivering a path string?
-					Basie::Table.new sym, File.new(params[:path]).read, params
+					Basie::Table.new tablename, File.new(params[:path]).read, params
 				elsif (String === params[:definition])
 					#are we delivering a definition directly?
-					Basie::Table.new sym, params[:definition], params
+					Basie::Table.new tablename, params[:definition], params
 				else
 					#create the path based on our internal setting.
-					path = File.join(@settings[:tabledir],"#{sym}.basie")
-					Basie::Table.new sym, File.new(path).read, params
+					path = File.join(@settings[:tabledir],"#{tablename}.basie")
+					Basie::Table.new tablename, File.new(path).read, params
 				end
 
 		#save this object to basie's table list
-		@tables[name] = table
+		@tables[tablename] = table
 
 		#now, register with the interpreters.
 		Basie.interpreters.each do |interpreter|

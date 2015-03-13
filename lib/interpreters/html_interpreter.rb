@@ -8,6 +8,10 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		@route = "/html"
 		super(params)
 
+		params[:table_id] = params[:table_id] == nil ? true : params[:table_id]
+		params[:header_class] = params[:header_class] == nil ? true : params[:header_class]
+		params[:entry_id] =	params[:entry_id] == nil ? true : params[:entry_id]
+
 		@@params = params
 	end
 
@@ -16,10 +20,12 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 
 	#for the table view:
 
-	# :no_table_id => true suppresses table id
+	# :table_id defaults to true.
+	# :table_id => false suppresses table id
 	# :table_id => (value) sets table id
 
-	# :no_header_class => true suppresses header class
+	# :header_class defaults to true
+	# :header_class => false suppresses header class
 	# :header_class => (value) sets header class
 
 	# :header_id => (Proc) sets a procedural translation
@@ -27,7 +33,8 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 	# :header_id => false suppresses the column header ids
 
 	#for the single entry view:
-	# :no_entry_id => true suppresses entry id
+	# :entry_id defaults to true
+	# :entry_id => false suppresses entry id
 	# :entry_id => (value) sets the id for entry view
 
 	#shared by both views.
@@ -81,11 +88,21 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 
 	def self.to_table(data, table)
 
-		tid = @@params[:table_id] || table.name
-		tid = @@params[:no_table_id] ? "" : "#" + tid.to_s
-
-		hid = @@params[:header_class] || "header"
-		hid = @@params[:no_header_class] ? "" : "." + hid.to_s
+		tid = case @@params[:table_id]
+		when TrueClass
+			"##{table.name}"
+		when FalseClass
+			""
+		else "##{@@params[:table_id]}"
+		end
+			
+		hid = case @@params[:header_class] 
+		when TrueClass
+			".header"
+		when FalseClass
+			""
+		else ".#{@@params[:header_class]}"
+		end
 
 		header = "%table" + tid
 
@@ -106,8 +123,13 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 	def self.to_dl(data, table)
 		#convert a single hash data into a dl.
 
-		eid = @@params[:entry_id] || (table.name.to_s + "_data")
-		eid = @@params[:no_entry_id] ? "" : "#" + eid.to_s
+		eid = case @@params[:entry_id]
+		when TrueClass
+			"##{table.name}_data"
+		when FalseClass
+			""
+		else "##{@@params[:entry_id]}"
+		end
 
 		#set up the output.
 		"%dl#{eid}" + data.keys.map{|k| "\n\t%dt#{ccs(k)} #{k}\n\t%dd#{ccs(k)} #{hinsert(table,k,data[k],2)} #{data[k]}"}.join
