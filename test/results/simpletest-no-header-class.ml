@@ -1,5 +1,5 @@
 <table id='simpletest'>
-  <tr class='header'>
+  <tr>
     <th class='id' id='id_header'>id</th>
     <th class='test' id='test_header'>test</th>
   </tr>

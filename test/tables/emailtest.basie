@@ -1,0 +1,3 @@
+#generic basie file
+primary_key	:id
+String		:test	#email

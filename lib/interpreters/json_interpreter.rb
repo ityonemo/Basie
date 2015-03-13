@@ -29,7 +29,6 @@ class Basie::JSONInterpreter < Basie::Interpreter
 		#register a path to the table.
 		app.get (fullroute) do
 			content_type :json
-
 			table.entire_table.to_json
 		end
 

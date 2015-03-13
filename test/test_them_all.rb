@@ -11,3 +11,7 @@ require_relative 'table_test'
 require_relative 'json_test'  
 require_relative 'html_test'  
 require_relative 'csv_test'
+
+#testing more sophisticated features
+require_relative 'hash_test'
+require_relative 'input_test'

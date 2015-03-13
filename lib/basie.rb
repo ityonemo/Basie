@@ -7,10 +7,10 @@ require 'stringio'
 #basie components.
 require_relative "table"
 require_relative "column"
-require_relative "base_interpreter"
-require_relative "json_interpreter"
-require_relative "html_interpreter"
-require_relative "csv_interpreter"
+require_relative "interpreters/base_interpreter"
+require_relative "interpreters/json_interpreter"
+require_relative "interpreters/html_interpreter"
+require_relative "interpreters/csv_interpreter"
 
 #basie is an environment that handles access to a database.
 class Basie
@@ -88,6 +88,10 @@ class Basie
 		@settings[:root] = params[:root] ? params[:root] : Dir.pwd
 		@settings[:tabledir] = File.join(@settings[:root], (params[:tabledir] ? params[:tabledir] : "/tables"))
 
+		#hashsalt data
+		@settings[:hashsalt] = params[:hashsalt] || "basie"
+		@settings[:hashlen] = params[:hashlen] || 12
+
 		#create a blank tables object.
 		@tables = {}
 	end
@@ -140,7 +144,7 @@ class Basie
 
 		#now, register with the interpreters.
 		Basie.interpreters.each do |interpreter|
-			interpreter.setup_paths(table)
+			interpreter.setup_paths table
 		end
 	end
 end

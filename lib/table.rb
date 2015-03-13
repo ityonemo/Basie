@@ -1,6 +1,10 @@
 #table.rb
 #contains the Table class which handles table definitions.
 
+#hash generation, for hash-ing stuff.
+require	'digest'
+require 'base64'
+
 #include table accessors methods.
 require_relative 'table_accessors'
 
@@ -14,18 +18,17 @@ class Basie::Column; end
 class Basie::Table
 	attr_reader :name
 	attr_reader :settings
-	attr_reader :columns
 	attr_reader :foreignkeys
-	attr_reader :searchcolumns
 	attr_reader :basie
 
-	#def columns(opt = nil)
-	#	if (@properties[:use_hash] || (opt == :all))
-	#		@columns.reject{|k,h| h.type == "primary_key" || h.htag == "suppress"}
-	#	else
-	#		@columns
-	#	end
-	#end
+	def columns
+		#cast out any columns which are a "primary key".  These will be subbed for the hash.
+		if @settings[:use_hash]
+			@columns.reject{|k,h| h.type == :primary_key}
+		else
+			@columns
+		end
+	end
 
 	def initialize(name, init_txt, params = {})
 		#check to make sure our arguments are all right.
@@ -47,7 +50,6 @@ class Basie::Table
 		@columns = {}
 		#initialize a foreign keys array
 		@foreignkeys = {}
-		@searchcolumns = nil
 
 		#then realize the input
 		analyze init_txt
@@ -102,6 +104,10 @@ class Basie::Table
 	private :analyze
 
 	def parse_setting(line)
+		#look for the "use_hash" setting
+		if line[0..7] == "use_hash"
+			@settings[:use_hash] = true
+		end
 	end
 	private :parse_setting
 
@@ -112,9 +118,17 @@ class Basie::Table
 		#check to make sure this wasn't a blank line with no content.
 		@columns[cl.name] = cl
 		#if this column is a foreign key column, then add it to the foreign key list.
-		if (cl.type == "foreign_key")
-			foreignkeys[cl.name] = cl.params[0].to_sym
-		end
 	end
 	private :parse_column
+
+	def hashgen(id)
+		#generates a hash given an id for the table.
+		Base64.urlsafe_encode64(Digest::SHA256.digest(@basie.settings[:hashsalt] + @name.to_s + id.to_s))[0...@basie.settings[:hashlen]]
+	end
+
+	def brandhash(id)
+		#brands an item with a certain id with its appropriate id
+		#note basie should be connected when running this.
+		@basie.db[@name].where(:id => id).update(:hash => hashgen(id))
+	end
 end

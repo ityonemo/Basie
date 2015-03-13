@@ -1,4 +1,4 @@
-<table id='simpletest'>
+<table id='substituted'>
   <tr class='header'>
     <th class='id' id='id_header'>id</th>
     <th class='test' id='test_header'>test</th>
