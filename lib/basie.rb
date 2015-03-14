@@ -7,10 +7,11 @@ require 'stringio'
 #basie components.
 require_relative "table"
 require_relative "column"
-require_relative "interpreters/base_interpreter"
-require_relative "interpreters/json_interpreter"
-require_relative "interpreters/html_interpreter"
-require_relative "interpreters/csv_interpreter"
+require_relative "interfaces/base_interface"
+require_relative "interfaces/json_interface"
+require_relative "interfaces/html_interface"
+require_relative "interfaces/csv_interface"
+require_relative "interfaces/post_interface"
 
 #basie is an environment that handles access to a database.
 class Basie
@@ -26,24 +27,24 @@ class Basie
 	attr_reader :tables
 
 	##########################################################################3
-	## MANAGEMENT OF INTERPRETERS
+	## MANAGEMENT OF INTERFACES
 
-	#a list of interpreters that we're using.
-	@@interpreters = []
+	#a list of interfaces that we're using.
+	@@interfaces = []
 	#and a half-accessor for that.
-	def self.interpreters; @@interpreters; end
-	#purge clears out the interpreters, but this should only be useful during debug phase.
-	def self.purge_interpreters; @@interpreters = []; end
+	def self.interfaces; @@interfaces; end
+	#purge clears out the interfaces, but this should only be useful during debug phase.
+	def self.purge_interfaces; @@interfaces = []; end
 
 	#the interpret directive causes Basie to activate an interpreter object.
-	def self.interpret(what, params = {})
+	def self.activate(what, params = {})
 		#use a little bit of reflection to instantiate basie interpreter.
 		case what
 		when Symbol
 			stxt = what.to_s[/\w+/]
 			#check to see if it is an internal class.
-			if eval("defined? Basie::#{stxt}Interpreter")
-				c = eval("Basie::#{stxt}Interpreter")
+			if eval("defined? Basie::#{stxt}Interface")
+				c = eval("Basie::#{stxt}Interface")
 			elsif eval("defined? #{stxt}")
 				c = eval(what.to_s)
 			else
@@ -54,17 +55,17 @@ class Basie
 				raise ArgumentError, "#{stxt} is not a class."
 			end
 
-			unless c.superclass == Basie::Interpreter
-				raise ArgumentError, "class #{stxt} is not an interpreter."
+			unless c.superclass == Basie::Interface
+				raise ArgumentError, "class #{stxt} is not an interface."
 			end
 
 			#instantiate the class
 			c.new params
 		when Class 
-			if what.superclass == Basie::Interpreter
+			if what.superclass == Basie::Interface
 				what.new params
 			else
-				raise ArgumentError, "class #{what} is not an interpreter."
+				raise ArgumentError, "class #{what} is not an interface."
 			end
 		else
 			raise ArgumentError, "unknown what"
@@ -144,9 +145,9 @@ class Basie
 		#save this object to basie's table list
 		@tables[tablename] = table
 
-		#now, register with the interpreters.
-		Basie.interpreters.each do |interpreter|
-			interpreter.setup_paths table
+		#now, register with the interfaces.
+		Basie.interfaces.each do |interface|
+			interface.setup_paths table
 		end
 	end
 end

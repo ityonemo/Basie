@@ -1,7 +1,7 @@
-#basic intrepreter, should be the root class for all Basie interpreters.
-#an interpreter is a singleton object that returns Basie data
+#basic interface, should be the root class for all Basie interfaces.
+#an interface is a singleton object that returns Basie data
 #or accepts basie data.
-class Basie::Interpreter
+class Basie::Interface
 
 	attr_reader :route 	#this is the url route
 
@@ -17,8 +17,8 @@ class Basie::Interpreter
 		end
 
 		#check to see if we've already registered this interpreter.
-		unless Basie.interpreters.any?{|i| self.class === i}
-			Basie.interpreters.push self
+		unless Basie.interfaces.any?{|i| self.class === i}
+			Basie.interfaces.push self
 		end
 		#otherwise silently fail.
 	end

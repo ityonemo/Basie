@@ -1,7 +1,7 @@
-require_relative "base_interpreter"
+require_relative "base_interface"
 
 #A JSON intrepreter for basie.
-class Basie::JSONInterpreter < Basie::Interpreter
+class Basie::JSONInterface < Basie::Interface
 
 	def initialize(params={})
 		@route = "/json"

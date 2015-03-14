@@ -1,7 +1,7 @@
-require_relative "base_interpreter"
+require_relative "base_interface"
 
 #POST intrepreter, creates a route for accepting POST instructions.
-class Basie::POSTInterpreter < Basie::Interpreter
+class Basie::POSTInterface < Basie::Interface
 
 	def setup_paths(table)
 

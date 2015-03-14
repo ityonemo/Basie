@@ -2,7 +2,7 @@ require_relative "base_interpreter"
 require 'haml'
 
 #HTML intrepreter.  Translates column data into HTML partials.
-class Basie::HTMLInterpreter < Basie::Interpreter
+class Basie::HTMLInterface < Basie::Interface
 
 	def initialize(params={})
 		@route = "/html"
@@ -223,7 +223,7 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 			app.get (fullroute) do
 				#get the data
 				res = table.entire_table
-				haml Basie::HTMLInterpreter.to_table(res, table)
+				haml Basie::HTMLInterface.to_table(res, table)
 			end
 		end
 
@@ -232,7 +232,7 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 			app.get (fullroute + "/:query") do |query|
 				#get the data
 				res = table.data_by_id(query)
-				haml Basie::HTMLInterpreter.to_dl(res, table)
+				haml Basie::HTMLInterface.to_dl(res, table)
 			end
 		end
 
@@ -244,7 +244,7 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 			app.get (fullroute + "/:query") do |query|
 				#get the data
 				res = table.data_by_id(query)
-				haml Basie::HTMLInterpreter.to_dl(res, table)
+				haml Basie::HTMLInterface.to_dl(res, table)
 			end
 		end
 =end
@@ -253,18 +253,18 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 			app.get (fullroute + "/:column/:query") do |column, query|
 				#get the data
 				res = table.data_by_query(column, query)
-				haml Basie::HTMLInterpreter.to_dl(res, table)
+				haml Basie::HTMLInterface.to_dl(res, table)
 			end
 		end
 
 		#register a path for inputting data
 		app.get ("/htmlform/#{table.name}") do
-			haml Basie::HTMLInterpreter.to_if(table)
+			haml Basie::HTMLInterface.to_if(table)
 		end
 
 		app.get ("/htmlform/#{table.name}/:query") do |query|
 			res = table.data_by_id(query)
-			haml Basie::HTMLInterpreter.to_if(table, res)
+			haml Basie::HTMLInterface.to_if(table, res)
 		end
 	end
 end

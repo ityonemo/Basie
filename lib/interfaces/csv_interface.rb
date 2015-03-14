@@ -1,7 +1,7 @@
-require_relative "base_interpreter"
+require_relative "base_interface"
 
 #A JSON intrepreter for basie.
-class Basie::CSVInterpreter < Basie::Interpreter
+class Basie::CSVInterface < Basie::Interface
 
 	def initialize(params={})
 		@route = "/csv"
@@ -49,7 +49,7 @@ class Basie::CSVInterpreter < Basie::Interpreter
 
 			res = table.entire_table
 
-			Basie::CSVInterpreter.to_csv(res)
+			Basie::CSVInterface.to_csv(res)
 		end
 
 		app.get (fullroute + '/:query') do |query|
@@ -57,13 +57,13 @@ class Basie::CSVInterpreter < Basie::Interpreter
 
 			res = table.data_by_id(query)
 
-			Basie::CSVInterpreter.to_csv(res)
+			Basie::CSVInterface.to_csv(res)
 		end
 
 		app.get (fullroute + '/:column/:query') do |column, query|
 			res = table.data_by_query(column, query)
 
-			Basie::CSVInterpreter.to_csv(res)
+			Basie::CSVInterface.to_csv(res)
 		end
 	end
 end
