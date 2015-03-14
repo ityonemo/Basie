@@ -1,16 +1,12 @@
 require_relative "base_interpreter"
 require 'haml'
 
-#JSON intrepreter, should be the root class for all Basie interpreters.
+#HTML intrepreter.  Translates column data into HTML partials.
 class Basie::HTMLInterpreter < Basie::Interpreter
 
 	def initialize(params={})
 		@route = "/html"
 		super(params)
-
-		params[:table_id] = params[:table_id] == nil ? true : params[:table_id]
-		params[:header_class] = params[:header_class] == nil ? true : params[:header_class]
-		params[:entry_id] =	params[:entry_id] == nil ? true : params[:entry_id]
 
 		#set a default route parameter.
 		params[:routes] = params[:routes] || :all
@@ -31,27 +27,37 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 
 	#for the table view:
 
-	# :table_id defaults to true.
-	# :table_id => false suppresses table id
-	# :table_id => (value) sets table id
+	# table_id sets the id for the entire table, this should correlate to the table name
+	# :table_id => (Proc) sets a procedural translation
+	# :table_id => (Hash) sets a hash translation
+	# :table_id => false suppresses the column header ids
 
-	# :header_class defaults to true
-	# :header_class => false suppresses header class
-	# :header_class => (value) sets header class
-
-	# :header_id => (Proc) sets a procedural translation
-	# :header_id => (Hash) sets a hash translation
-	# :header_id => false suppresses the column header ids
+	# :header_class => false suppresses the tr "header" class
 
 	#for the single entry view:
+	# entry_id sets the id for the entire list, this should correlate to the table name
 	# :entry_id defaults to true
 	# :entry_id => false suppresses entry id
 	# :entry_id => (value) sets the id for entry view
 
-	#shared by both views.
+	#for the html entry form.
+
+	# form_id sets the id for the entire form, this should correlate to the table name
+	# :form_id => (Proc) sets a procedural translation
+	# :form_id => (Hash) sets a hash translation
+	# :form_id => false suppresses form id
+
+	# column_id sets the id for the div encapsulating each column, this should correlate to the column name
+	# :column_id => (Proc) sets a procedural translation
+	# :column_id => (Hash) sets a hash translation
+	# :column_id => false suppresses form id
+
+	#shared by all views.
+	# column_class sets the class for various informational tags, this should correlate to the column name
 	# :column_class => (Proc) sets a procedural translation
 	# :column_class => (Hash) sets a hash translation
 	# :column_class => false suppresses column class
+
 
 	def self.hinsert(table, cname, val, indents)
 		case table.columns[cname].params[:htag]
@@ -69,52 +75,37 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 
 	################################################################
 	## HELPER class functions that translate parameters to haml bits.
-	def self.ccs(col)
-		ccfn = @@params[:column_class]
-		case ccfn
+	def self.hml(tag, param_tag, suffix = "")
+		hmfn = @@params[param_tag]
+
+		#introspective assignment of the prefix.
+		prefix = case param_tag.to_s.split("_")[1] 
+		when "id"
+			"#"
+		when "class"
+			"."
+		else
+			raise ArgumentError, "incorrect parameter tag type"
+		end
+
+		case hmfn
 		when Proc
-			ccfn.call(col) ? "." + ccfn.call(col) : ""
+			hmfn.call(tag) ? prefix + hmfn.call(tag) : ""
 		when Hash
-			ccfn[col] ? "." + ccfn[col] : ""
+			hmfn[tag] ? prefix + hmfn[tag] : ""
 		when FalseClass
 			""
-		when NilClass
-			"." + col.to_s
+		when NilClass, TrueClass
+			prefix + tag.to_s + suffix
 		end
 	end
 
-	def self.hid(col)
-		hifn = @@params[:header_id]
-		case hifn
-		when Proc
-			hifn.call(col) ? "#" + hifn.call(col) : ""
-		when Hash
-			hifn[col] ? "#" + hifn[col] : ""
-		when FalseClass
-			""
-		when NilClass
-			"#" + col.to_s + "_header"
-		end
-	end
+	################################################################
+	## HELPER class functions that translate parameters to haml bits.
 
 	def self.to_table(data, table)
 
-		tid = case @@params[:table_id]
-		when TrueClass
-			"##{table.name}"
-		when FalseClass
-			""
-		else "##{@@params[:table_id]}"
-		end
-			
-		hid = case @@params[:header_class] 
-		when TrueClass
-			".header"
-		when FalseClass
-			""
-		else ".#{@@params[:header_class]}"
-		end
-
+		tid = hml(table.name, :table_id)
 		header = "%table" + tid
 
 		#check to see if our table is going to be blank.
@@ -122,46 +113,55 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 			return header
 		end
 
+		hcs = @@params[:header_class] == false ? "" : ".header"
+
 		#add the header row which contains all of the common keys.
-		header += "\n\t%tr#{hid}" 
+		header += "\n\t%tr#{hcs}" 
 
-		header += data[0].keys.map{|k| "\n\t\t%th#{ccs(k)}#{hid(k)} #{k}"}.join
+		#add the header rows.
+		header += data[0].keys.map{|k| "\n\t\t%th#{hml(k, :column_class)} #{k}"}.join
+		
 		#then add all of the data rows.
-
-		header + data.each.map {|h| "\n\t%tr" + h.keys.map {|k|"\n\t\t%td#{ccs(k)} #{hinsert(table,k,h[k],3)} #{h[k]}"}.join}.join
+		header + data.each.map {|h| "\n\t%tr" + h.keys.map {|k|"\n\t\t%td#{hml(k, :column_class)} #{hinsert(table,k,h[k],3)} #{h[k]}"}.join}.join
 	end
 
 	def self.to_dl(data, table)
 		#convert a single hash data into a dl.
 
-		eid = case @@params[:entry_id]
-		when TrueClass
-			"##{table.name}_data"
-		when FalseClass
-			""
-		else "##{@@params[:entry_id]}"
-		end
-
 		#set up the output.
-		"%dl#{eid}" + data.keys.map{|k| "\n\t%dt#{ccs(k)} #{k}\n\t%dd#{ccs(k)} #{hinsert(table,k,data[k],2)} #{data[k]}"}.join
+		dlid = hml(table.name, :entry_id, "_data")
+		"%dl#{dlid}" + data.keys.map{|k| "\n\t%dt#{hml(k, :column_class)} #{k}\n\t%dd#{hml(k, :column_class)} #{hinsert(table,k,data[k],2)} #{data[k]}"}.join
 	end
 
 	##############################################################
 	## INPUT FORMS
 
-	def self.to_if(table)
-		o = "%form(action=\"/data\" method=\"post\")\n"
-		table.columns.each_value do |column|
-			case (column.params[:htag])
+	#blank input form
+	def self.to_if(table, data={})
+		fid = hml(table.name, :form_id, "_input")
+		actionsuffix = data[:id] ? "/#{data[:id]}" : ""
+
+		o = "%form#{fid}(action=\"/data#{actionsuffix}\" method=\"post\")\n"
+
+		table.columns.each_key do |column|
+
+			cid = hml(column, :column_id, "_input")
+			ccs = hml(column, :column_class)
+
+			htag = table.columns[column].params[:htag]
+
+			dtxt = data[column] ? "value=\"#{data[column]}\"" : ""
+
+			case (htag)
 			when :suppress, :hash, :primary_key #do nothing
 			when :textarea
-				o += "\t%div\n"
-				o += "\t\t%label #{column.name}\n"
-				o += "\t\t%textarea(name=\"#{column.name}\"\n)"
+				o += "\t%div#{cid}\n"
+				o += "\t\t%label#{ccs} #{column}\n"
+				o += "\t\t%textarea#{ccs}(name=\"#{column}\" #{dtxt})\n"
 			else
-				o += "\t%div\n"
-				o += "\t\t%label #{column.name}\n"
-				o += "\t\t%input(name=\"#{column.name}\" type=\"#{column.params[:htag]}\")\n"
+				o += "\t%div#{cid}\n"
+				o += "\t\t%label#{ccs} #{column}\n"
+				o += "\t\t%input#{ccs}(name=\"#{column}\" type=\"#{htag}\" #{dtxt})\n"
 			end
 		end
 		o
@@ -177,8 +177,7 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		"email" 		=> :email,
 		"suppress" 		=> :suppress,	#note that there is no "suppress" type in the standard HTML lexicon.
 		"hash" 			=> :hash,		#this exists to be able to suppress hashes in input forms, but they should be displayed.
-		"options" 		=> :option,
-		"picker" 		=> :picker,
+		#"options" 		=> :option,		#TO BE IMPLEMENTED
 		#as defined by type
 		:primary_key	=> :primary_key,#this exists to be able to suppress primary_key in input form, but they should be displayed.
 		:integer		=> :number,
@@ -249,7 +248,6 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 			end
 		end
 =end
-
 		#register a path for querying
 		if (@@params[:routes] == :all || @params[:routes].include?(:query))
 			app.get (fullroute + "/:column/:query") do |column, query|
@@ -262,6 +260,11 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		#register a path for inputting data
 		app.get ("/htmlform/#{table.name}") do
 			haml Basie::HTMLInterpreter.to_if(table)
+		end
+
+		app.get ("/htmlform/#{table.name}/:query") do |query|
+			res = table.data_by_id(query)
+			haml Basie::HTMLInterpreter.to_if(table, res)
 		end
 	end
 end

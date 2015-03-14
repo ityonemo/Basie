@@ -92,13 +92,47 @@ class HTMLTest < Test::Unit::TestCase
     destroy :simpletest
   end
 
+  def test_input_form
+    create :simpletest
+      get('/htmlform/simpletest')
+
+      assert last_response.ok?
+      assert_equal File.new("./results/simpletest-form.ml").read, last_response.body
+    destroy :simpletest
+  end
+
+  def test_input_form_with_data
+    create :simpletest
+    get('/htmlform/simpletest/1')
+
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-with-data.ml").read, last_response.body
+
+    destroy :simpletest
+  end
+
+  def test_input_form_complex
+    create :complextest
+      get('htmlform/complextest')
+
+      assert last_response.ok?
+      assert_equal File.new("./results/complextest-form.ml").read, last_response.body
+    destroy :complextest
+  end
+
   #####################################################################################333
   ##### PLAYING WITH CSS
 
-  def test_table_id_suppression
+  def reset_basie(params = {})
     Basie.purge_interpreters
-    Basie.interpret :HTML, :table_id => false
+    Basie.interpret :HTML, params
+  end
 
+###################################################################
+## :table_id
+
+  def test_table_id_suppression
+    reset_basie :table_id => false
     create :simpletest
 
     get('/html/simpletest')
@@ -106,15 +140,11 @@ class HTMLTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpletest-no-table-id.ml").read, last_response.body
 
     destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
+    reset_basie
   end
 
-  def test_table_id_substitution
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :table_id => "substituted"
-
+  def test_table_id_proc
+    reset_basie :table_id => Proc.new {"substituted"}
     create :simpletest
 
     get('/html/simpletest')
@@ -122,46 +152,163 @@ class HTMLTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpletest-sub-table-id.ml").read, last_response.body
 
     destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
+    reset_basie
   end
 
-  def test_header_class_suppression
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :header_class => false
+  def test_table_id_hash
+    reset_basie :table_id => {:simpletest => "substituted"}
+    create :simpletest
+
+    get('/html/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-sub-table-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+###################################################################
+## :header_class
+
+  def test_header_suppression
+    reset_basie :header_class => false
 
     create :simpletest
-    get('/html/simpletest')
 
+    get('/html/simpletest')
     assert last_response.ok?
     assert_equal File.new("./results/simpletest-no-header-class.ml").read, last_response.body
 
     destroy :simpletest
 
-    Basie.purge_interpreters
-    Basie.interpret :HTML
+    reset_basie
   end
 
-  def test_header_class_substitution
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :header_class => "substituted"
 
+###################################################################
+## :entry_id
+
+  def test_entry_id_suppression
+    reset_basie :entry_id => false
     create :simpletest
-    get('/html/simpletest')
 
+    get('/html/simpletest/1')
     assert last_response.ok?
-    assert_equal File.new("./results/simpletest-sub-header-class.ml").read, last_response.body
+    assert_equal File.new("./results/simpletest-part-no-entry-id.ml").read, last_response.body
 
     destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
+    reset_basie
   end
 
+  def test_entry_id_proc
+    reset_basie :entry_id => Proc.new {"substituted"}
+    create :simpletest
+
+    get('/html/simpletest/1')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-part-sub-entry-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+  def test_entry_id_hash
+    reset_basie :entry_id => {:simpletest => "substituted"}
+    create :simpletest
+
+    get('/html/simpletest/1')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-part-sub-entry-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+
+###################################################################
+## :form_id
+
+  def test_form_id_suppression
+    reset_basie :form_id => false
+    create :simpletest
+
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-no-form-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+  def test_form_id_proc
+    reset_basie :form_id => Proc.new {"substituted"}
+    create :simpletest
+
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-sub-form-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+  def test_form_id_hash
+    reset_basie :form_id => {:simpletest => "substituted"}
+    create :simpletest
+
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-sub-form-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+
+###################################################################
+## :column_id
+
+  def test_column_id_suppression
+    reset_basie :column_id => false
+    create :simpletest
+
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-no-column-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+  def test_column_id_proc
+    reset_basie :column_id => Proc.new {"substituted"}
+    create :simpletest
+
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-sub-column-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+  def test_column_id_hash
+    reset_basie :column_id => {:test => "substituted"}
+    create :simpletest
+
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-sub-column-id.ml").read, last_response.body
+
+    destroy :simpletest
+    reset_basie
+  end
+
+###################################################################
+## :column_class
+
   def test_column_class_removal
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :column_class => false
+    reset_basie :column_class => false
 
     create :simpletest
 
@@ -173,16 +320,16 @@ class HTMLTest < Test::Unit::TestCase
     assert last_response.ok?
     assert_equal File.new("./results/simpletest-part-no-column-class.ml").read, last_response.body
 
-    destroy :simpletest
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-no-column-class.ml").read, last_response.body
 
-    Basie.purge_interpreters
-    Basie.interpret :HTML
+    destroy :simpletest
+    reset_basie
   end  
 
   def test_column_class_proc
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :column_class => Proc.new{|col| col == :id ? "substituted" : false}
-
+    reset_basie :column_class => Proc.new{|col| col == :id ? "substituted" : false}
     create :simpletest
 
     get('/html/simpletest')
@@ -193,111 +340,32 @@ class HTMLTest < Test::Unit::TestCase
     assert last_response.ok?
     assert_equal File.new("./results/simpletest-part-sub-column-class.ml").read, last_response.body
 
-    destroy :simpletest
+    get('/htmlform/simpletest')
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-form-no-column-class.ml").read, last_response.body
 
-    Basie.purge_interpreters
-    Basie.interpret :HTML
+    destroy :simpletest
+    reset_basie
   end
 
   def test_column_class_hash
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :column_class => {:id => "substituted", :test => false}
-
+    reset_basie :column_class => {:id => "substituted", :test => false}
     create :simpletest
 
     get('/html/simpletest')
     assert last_response.ok?
     assert_equal File.new("./results/simpletest-sub-column-class.ml").read, last_response.body
 
-
     get('/html/simpletest/1')
     assert last_response.ok?
     assert_equal File.new("./results/simpletest-part-sub-column-class.ml").read, last_response.body
 
-    destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
-  end
-
-  def test_header_id_removal
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :header_id => false
-
-    create :simpletest
-
-    get('/html/simpletest')
+    get('/htmlform/simpletest')
     assert last_response.ok?
-    assert_equal File.new("./results/simpletest-no-header-id.ml").read, last_response.body
+    assert_equal File.new("./results/simpletest-form-no-column-class.ml").read, last_response.body
 
     destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
-  end  
-
-  def test_header_id_proc
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :header_id => Proc.new{|col| col == :id ? "substituted" : false}
-
-    create :simpletest
-
-    get('/html/simpletest')
-    assert last_response.ok?
-    assert_equal File.new("./results/simpletest-sub-header-id.ml").read, last_response.body
-
-    destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
-  end
-
-  def test_header_id_hash
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :header_id => {:id => "substituted", :test => false}
-
-    create :simpletest
-
-    get('/html/simpletest')
-    assert last_response.ok?
-    assert_equal File.new("./results/simpletest-sub-header-id.ml").read, last_response.body
-
-    destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
-  end
-
-  def test_entry_id_suppression
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :entry_id => false
-
-    create :simpletest
-
-    get('/html/simpletest/1')
-    assert last_response.ok?
-    assert_equal File.new("./results/simpletest-part-no-entry-id.ml").read, last_response.body
-
-    destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
-  end
-
-  def test_entry_id_substitution
-    Basie.purge_interpreters
-    Basie.interpret :HTML, :entry_id => "substituted"
-
-    create :simpletest
-
-    get('/html/simpletest/1')
-    assert last_response.ok?
-    assert_equal File.new("./results/simpletest-part-sub-entry-id.ml").read, last_response.body
-
-    destroy :simpletest
-
-    Basie.purge_interpreters
-    Basie.interpret :HTML
+    reset_basie
   end
 
   ##############################################################################3
@@ -343,16 +411,5 @@ class HTMLTest < Test::Unit::TestCase
     assert_equal File.new("./results/teltest-part.ml").read, last_response.body
 
     destroy :teltest
-  end
-
-  ###########################################################################
-  ## TEST INPUT FORM GENERATION.
-
-  def test_input_form
-    create :simpletest
-      get('/htmlform/simpletest')
-
-      puts last_response.body
-    destroy :simpletest
   end
 end

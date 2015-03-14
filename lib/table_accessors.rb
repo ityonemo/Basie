@@ -32,16 +32,14 @@ class Basie::Table
 	end
 
 	def data_by_id(id)
-		#returns the table data by row id (primary key)
+		#returns the table data by row id (primary or hash key)
 		@basie.connect do |db|
-			db.fetch("SELECT #{csel} FROM #{@name} WHERE id = '#{id}'").first
-		end
-	end
-
-	def data_by_hash(hash)
-		#returns the table data by hash (secondary key)
-		@basie.connect do |db|
-			db.fetch("SELECT #{csel} from #{@name} WHERE hash = '#{hash}'").first
+			case id.to_i		#use the to_i function to assess if it's a hash or not.			
+			when 0
+				db.fetch("SELECT #{csel} from #{@name} WHERE hash = '#{id}'").first
+			else
+				db.fetch("SELECT #{csel} FROM #{@name} WHERE id = '#{id}'").first
+			end
 		end
 	end
 
@@ -58,6 +56,38 @@ class Basie::Table
 		#returns table data by general column query
 		@basie.connect do |db|
 			db.fetch("SELECT #{csel} from #{@name} WHERE #{column} = '#{query}'").first
+		end
+	end
+
+	def insert_data(data)
+		#runs a basic insert.
+		@basie.connect do |db|
+
+			#data could be an array or a hash.
+			case (data)
+			when Array
+				data.each do |datum|
+					id = db[@name].insert(datum)
+					brandhash(id)
+				end
+			when Hash
+				id = db[@name].insert(data)
+				#brand the hash, since we have inserted new data
+				brandhash(id)
+			end
+		end
+	end
+
+	def update_data(identifier, data)
+		#a basic update should be a single item.
+		#please remove the :id key when updating via id, and the :hash and :id keys when updating via identifier.
+		basie.connect do |db|
+			case identifier
+			when Integer  #should be an id number.
+				db[@name].where(:id => identifier).update(data)
+			when String #should be a hash
+				db[@name].where(:hash => identifier).update(data)
+			end
 		end
 	end
 end

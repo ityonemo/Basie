@@ -1,7 +1,7 @@
 <table id='hashtest'>
   <tr class='header'>
-    <th class='hash' id='hash_header'>hash</th>
-    <th class='content' id='content_header'>content</th>
+    <th class='hash'>hash</th>
+    <th class='content'>content</th>
   </tr>
   <tr>
     <td class='hash'>G-qeUNuU2Ow8</td>

@@ -1,0 +1,11 @@
+#complex basie file
+primary_key	:id
+String		:hash		#hash
+String		:pass		#suppress
+String		:test0		#a vanilla string
+String		:test1		#tel
+String		:test2		#url
+String		:test3		#email
+boolean		:test4
+Date		:test5
+text		:test6		

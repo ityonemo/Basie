@@ -1,7 +1,7 @@
 <table>
   <tr class='header'>
-    <th class='id' id='id_header'>id</th>
-    <th class='test' id='test_header'>test</th>
+    <th class='id'>id</th>
+    <th class='test'>test</th>
   </tr>
   <tr>
     <td class='id'>1</td>

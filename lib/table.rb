@@ -127,6 +127,8 @@ class Basie::Table
 	def brandhash(id)
 		#brands an item with a certain id with its appropriate id
 		#note basie should be connected when running this.
-		@basie.db[@name].where(:id => id).update(:hash => hashgen(id))
+		if @settings[:use_hash]
+			@basie.db[@name].where(:id => id).update(:hash => hashgen(id))
+		end
 	end
 end
