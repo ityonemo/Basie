@@ -344,4 +344,15 @@ class HTMLTest < Test::Unit::TestCase
 
     destroy :teltest
   end
+
+  ###########################################################################
+  ## TEST INPUT FORM GENERATION.
+
+  def test_input_form
+    create :simpletest
+      get('/htmlform/simpletest')
+
+      puts last_response.body
+    destroy :simpletest
+  end
 end

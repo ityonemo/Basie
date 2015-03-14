@@ -12,8 +12,19 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		params[:header_class] = params[:header_class] == nil ? true : params[:header_class]
 		params[:entry_id] =	params[:entry_id] == nil ? true : params[:entry_id]
 
+		#set a default route parameter.
+		params[:routes] = params[:routes] || :all
+
 		@@params = params
 	end
+
+	#################
+	#ROUTE OPTIONS:
+	# :all      -all routes
+	# :table    -get the full table
+	# :id       -get a row by id (or hash)
+	# :search   -search for a row
+	# :query    -search for a row by query
 
 	#################
 	#CSS-ING-OPTIONS:
@@ -135,16 +146,41 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		"%dl#{eid}" + data.keys.map{|k| "\n\t%dt#{ccs(k)} #{k}\n\t%dd#{ccs(k)} #{hinsert(table,k,data[k],2)} #{data[k]}"}.join
 	end
 
+	##############################################################
+	## INPUT FORMS
+
+	def self.to_if(table)
+		o = "%form(action=\"/data\" method=\"post\")\n"
+		table.columns.each_value do |column|
+			case (column.params[:htag])
+			when :suppress, :hash, :primary_key #do nothing
+			when :textarea
+				o += "\t%div\n"
+				o += "\t\t%label #{column.name}\n"
+				o += "\t\t%textarea(name=\"#{column.name}\"\n)"
+			else
+				o += "\t%div\n"
+				o += "\t\t%label #{column.name}\n"
+				o += "\t\t%input(name=\"#{column.name}\" type=\"#{column.params[:htag]}\")\n"
+			end
+		end
+		o
+	end
+
+	##########################################################################
+	## PARSING OPTIONS IN THE TABLE
+
 	@@htaghash = {
 		#custom htags as defined by comments
 		"tel" 			=> :tel,
 		"url" 			=> :url,
 		"email" 		=> :email,
 		"suppress" 		=> :suppress,	#note that there is no "suppress" type in the standard HTML lexicon.
-		"hash" 			=> :suppress,
+		"hash" 			=> :hash,		#this exists to be able to suppress hashes in input forms, but they should be displayed.
 		"options" 		=> :option,
 		"picker" 		=> :picker,
 		#as defined by type
+		:primary_key	=> :primary_key,#this exists to be able to suppress primary_key in input form, but they should be displayed.
 		:integer		=> :number,
         :bigint			=> :number,
         :numeric		=> :number,
@@ -157,7 +193,6 @@ class Basie::HTMLInterpreter < Basie::Interpreter
         :boolean		=> :checkbox,
         :blob			=> :file
 	}
-
 	def parse_for_column(column, columnsettings)
 
 		columnsettings.each do |statement|
@@ -171,7 +206,10 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		column.params[:htag] = column.params[:htag] || @@htaghash[column.type]
 	end
 
+	#################################################################
+
 	def setup_paths(table)
+
 		#table should be a symbol to the name of the table.
 		fullroute = "#{@route}/#{table.name}"
 
@@ -182,22 +220,48 @@ class Basie::HTMLInterpreter < Basie::Interpreter
 		## /html/[name]/[column]/[match] - queries all database rows that match expected
 
 		#register a path to the table.
-		app.get (fullroute) do
-			#get the data
-			res = table.entire_table
-			haml Basie::HTMLInterpreter.to_table(res, table)
+		if (@@params[:routes] == :all || @params[:routes].include?(:table))
+			app.get (fullroute) do
+				#get the data
+				res = table.entire_table
+				haml Basie::HTMLInterpreter.to_table(res, table)
+			end
 		end
 
-		app.get (fullroute + "/:query") do |query|
-			#get the data
-			res = table.data_by_id(query)
-			haml Basie::HTMLInterpreter.to_dl(res, table)
+		#register a path to just id stuff
+		if (@@params[:routes] == :all || @params[:routes].include?(:id))
+			app.get (fullroute + "/:query") do |query|
+				#get the data
+				res = table.data_by_id(query)
+				haml Basie::HTMLInterpreter.to_dl(res, table)
+			end
 		end
 
-		app.get (fullroute + "/:column/:query") do |column, query|
-			#get the data
-			res = table.data_by_query(column, query)
-			haml Basie::HTMLInterpreter.to_dl(res, table)
+=begin
+		#register a path for searching
+		if (@@params[:routes] == :all || @params[:routes].include?(:search))
+			#TODO:  IMPLEMENT DEFAULT SEARCHABLE COLUMNS
+
+			app.get (fullroute + "/:query") do |query|
+				#get the data
+				res = table.data_by_id(query)
+				haml Basie::HTMLInterpreter.to_dl(res, table)
+			end
+		end
+=end
+
+		#register a path for querying
+		if (@@params[:routes] == :all || @params[:routes].include?(:query))
+			app.get (fullroute + "/:column/:query") do |column, query|
+				#get the data
+				res = table.data_by_query(column, query)
+				haml Basie::HTMLInterpreter.to_dl(res, table)
+			end
+		end
+
+		#register a path for inputting data
+		app.get ("/htmlform/#{table.name}") do
+			haml Basie::HTMLInterpreter.to_if(table)
 		end
 	end
 end
