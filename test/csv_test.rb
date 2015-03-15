@@ -16,7 +16,7 @@ class CSVTest < Test::Unit::TestCase
   end
 
   def setup
-    Basie.interpret :CSV
+    Basie.activate :CSV
   end
 
   #test the basic route

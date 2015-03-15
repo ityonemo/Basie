@@ -39,6 +39,7 @@ class BasieTest < Test::Unit::TestCase
   def test_connection
     bs = Basie.new :name => "testdb"
     bs.connect do
+      bs.db.drop_table? :testtable
       #specific setup:  create a blank table, nothing but a primary key.
       bs.db.create_table :testtable do
         primary_key   :id
@@ -57,6 +58,7 @@ class BasieTest < Test::Unit::TestCase
     bs = Basie.new :name => "testdb"
     #create a blank table, with a primary key and a single element.
     bs.connect do
+      bs.db.drop_table? :testtable
       bs.db << 'CREATE TABLE testtable (testcolumn char(64))'
       bs.db[:testtable].insert({:testcolumn => "test test"})
       res = bs.db[:testtable].first
@@ -67,38 +69,38 @@ class BasieTest < Test::Unit::TestCase
     end
   end
 
-  #TEST INTERPRETER INITIALIZATION
-  def test_default_interpreters
-    Basie.interpret :CSV
-    Basie.interpret :HTML
-    Basie.interpret :JSON
+  #TEST INTERFACE INITIALIZATION
+  def test_default_interfaces
+    Basie.activate :CSV
+    Basie.activate :HTML
+    Basie.activate :JSON
 
-    assert_equal 3, Basie.interpreters.length, "failed to find a default interpreter"
-    Basie.purge_interpreters
+    assert_equal 3, Basie.interfaces.length, "failed to find a default interface"
+    Basie.purge_interfaces
   end
 
-  def test_double_interpretering
-    #the interpreter list should reject an attempt to duplicate an interpreter.
-    Basie.interpret :CSV
-    Basie.interpret :CSV
+  def test_double_interfacing
+    #the interface list should reject an attempt to duplicate an interface.
+    Basie.activate :CSV
+    Basie.activate :CSV
 
-    assert_equal 1, Basie.interpreters.length, "failed to not instantiate duplicate interpreters"
-    Basie.purge_interpreters
+    assert_equal 1, Basie.interfaces.length, "failed to not instantiate duplicate interfaces"
+    Basie.purge_interfaces
   end
 
   def test_try_to_interpret_nothing
-    assert_raise(ArgumentError){Basie.interpret :notaclass}
+    assert_raise(ArgumentError){Basie.activate :notaclass}
   end
 
   def test_try_to_interpret_bad_class
-    assert_raise(ArgumentError){Basie.interpret :String}
+    assert_raise(ArgumentError){Basie.activate :String}
   end
 
   def test_by_class
-    Basie.interpret Basie::HTMLInterpreter
+    Basie.activate Basie::HTMLInterface
 
-    assert_equal 1, Basie.interpreters.length, "failed to instantiate an interpreter by class"
-    Basie.purge_interpreters
+    assert_equal 1, Basie.interfaces.length, "failed to instantiate an interface by class"
+    Basie.purge_interfaces
   end
 
 end

@@ -16,7 +16,7 @@ class HTMLTest < Test::Unit::TestCase
   end
 
   def setup
-    Basie.interpret :HTML
+    Basie.activate :HTML
   end
 
   def test_column_integer_default_hash
@@ -124,8 +124,8 @@ class HTMLTest < Test::Unit::TestCase
   ##### PLAYING WITH CSS
 
   def reset_basie(params = {})
-    Basie.purge_interpreters
-    Basie.interpret :HTML, params
+    Basie.purge_interfaces
+    Basie.activate :HTML, params
   end
 
 ###################################################################

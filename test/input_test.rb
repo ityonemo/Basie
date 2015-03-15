@@ -7,7 +7,7 @@ require "rack/test"
 require_relative '../lib/basie'
 require_relative 'test_databases'
 
-class HashTest < Test::Unit::TestCase
+class INPUTTest < Test::Unit::TestCase
   include Rack::Test::Methods
 
   def app
@@ -15,7 +15,7 @@ class HashTest < Test::Unit::TestCase
   end
 
   def setup
-    Basie.interpret :HTML
+    Basie.activate :HTML
   end
 
   def test_basic_input

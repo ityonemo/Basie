@@ -15,7 +15,7 @@ class JSONTest < Test::Unit::TestCase
   end
 
   def setup
-    Basie.interpret :JSON
+    Basie.activate :JSON
   end
 
   #test the basic route

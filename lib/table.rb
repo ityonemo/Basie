@@ -88,8 +88,8 @@ class Basie::Table
 				#parse as if it is a settings
 				if header
 					parse_setting sline[1..-1]
-					Basie.interpreters.each do |interpreter|
-						interpreter.parse_for_table(self, sline[1..-1])
+					Basie.interfaces.each do |interface|
+						interface.parse_for_table(self, sline[1..-1])
 					end
 				end
 			else

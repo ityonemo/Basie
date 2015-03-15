@@ -91,9 +91,9 @@ class Basie::Column
 	private :type_of
 
 	def set_params(comments)
-		#pass all comments to the interpreters
-		Basie.interpreters.each do |interpreter|
-			interpreter.parse_for_column(self, comments)
+		#pass all comments to the interfaces
+		Basie.interfaces.each do |interface|
+			interface.parse_for_column(self, comments)
 		end
 	end
 	private :set_params

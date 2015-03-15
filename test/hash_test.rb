@@ -17,7 +17,7 @@ class HashTest < Test::Unit::TestCase
 
   def test_json_hashtable
 
-    Basie.interpret :JSON
+    Basie.activate :JSON
 
   	create :hashtest
 
@@ -31,7 +31,7 @@ class HashTest < Test::Unit::TestCase
 
   def test_html_hashtable
 
-    Basie.interpret :HTML
+    Basie.activate :HTML
 
   	create :hashtest
 
@@ -45,7 +45,7 @@ class HashTest < Test::Unit::TestCase
 
   def test_csv_hashtable
 
-    Basie.interpret :CSV
+    Basie.activate :CSV
 
   	create :hashtest
 

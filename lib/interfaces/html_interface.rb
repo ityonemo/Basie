@@ -1,4 +1,4 @@
-require_relative "base_interpreter"
+require_relative "base_interface"
 require 'haml'
 
 #HTML intrepreter.  Translates column data into HTML partials.
