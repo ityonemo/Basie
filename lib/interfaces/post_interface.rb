@@ -40,8 +40,8 @@ class Basie::POSTInterface < Basie::Interface
 			end
 =end
 
-			#toss out parameters that aren't the ones we care about.
-			p = params.reject{|col, val| !table.columns.has_key?(col.to_sym)}
+			#toss out parameters that aren't the ones we care about.  Also drop out :id and :hash parameters in case of adversarial attempts\
+			p = params.reject{|col, val| c = col.to_sym; (!table.columns.has_key?(c) || c == :id || c == :hash)}
 
 			table.insert_data(p)
 
@@ -49,9 +49,8 @@ class Basie::POSTInterface < Basie::Interface
 		end
 
 		app.post(fullpath + "/:id") do |id|
-			#toss out parameters that aren't the ones we care about.
-
-			p = params.reject{|col, val| !table.columns.has_key?(col.to_sym)}
+			#toss out parameters that aren't the ones we care about. Also drop out :id and :hash parameters in case of adversarial attempts
+			p = params.reject{|col, val| c = col.to_sym; (!table.columns.has_key?(c) || c == :id || c == :hash)}
 
 			table.update_data(id, p)
 
