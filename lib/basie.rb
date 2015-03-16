@@ -7,6 +7,7 @@ require 'stringio'
 #basie components.
 require_relative "table"
 require_relative "column"
+require_relative "basie_errors"
 require_relative "interfaces/base_interface"
 require_relative "interfaces/json_interface"
 require_relative "interfaces/html_interface"
@@ -67,6 +68,12 @@ class Basie
 			else
 				raise ArgumentError, "class #{what} is not an interface."
 			end
+		when Array
+			#also allow us to do arrays.
+			what.each{|interface| self.activate(interface)}
+		when Hash 
+			#or hashes, if we wish to add parameters.
+			what.each{|interface, parameters| self.activate(interface, parameters)}
 		else
 			raise ArgumentError, "unknown what"
 		end

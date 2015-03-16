@@ -1,10 +1,6 @@
 #column.rb
 #contains the Column class which handles column definitions.
 
-#creates an error which happens when there is a probelm in Basie definition
-class Basie::DefinitionError < StandardError  
-end  
-
 class Basie::Column
 	attr_reader :name		#column name
 	attr_reader :type		#column type

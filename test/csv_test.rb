@@ -17,39 +17,36 @@ class CSVTest < Test::Unit::TestCase
 
   def setup
     Basie.activate :CSV
+
+    create :simpletest
+  end
+
+  def teardown
+    destroy :simpletest
+
+    Basie.purge_interfaces
   end
 
   #test the basic route
   def test_fulltable_route
-
-  	create :simpletest
-
     #run the damn thing
     get('/csv/simpletest')
 
     #assertions about what the route we just triggered
     assert last_response.ok?
     assert_equal File.new("./results/simpletest.csv").read, last_response.body
-
-    destroy :simpletest
   end
 
   def test_id_query_route
-    create :simpletest
-
     #get just one line
     get ('/csv/simpletest/1')
 
     #assertions about what the route we just triggered
     assert last_response.ok?
     assert_equal "\"id\",\"test\"\n\"1\",\"one\"\n", last_response.body
-
-    destroy :simpletest
   end
 
   def test_specific_query_route
-    create :simpletest
-
     #get one line where we've preselected the data
     #get just one line
     get('/csv/simpletest/test/one')
@@ -57,7 +54,5 @@ class CSVTest < Test::Unit::TestCase
     #assertions about what the route we just triggered
     assert last_response.ok?
     assert_equal "\"id\",\"test\"\n\"1\",\"one\"\n", last_response.body
-
-    destroy :simpletest
   end
 end
