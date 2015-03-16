@@ -81,12 +81,12 @@ class Basie::Table
 	def update_data(identifier, data)
 		#a basic update should be a single item.
 		#please remove the :id key when updating via id, and the :hash and :id keys when updating via identifier.
-		basie.connect do |db|
-			case identifier
-			when Integer  #should be an id number.
-				db[@name].where(:id => identifier).update(data)
-			when String #should be a hash
+		@basie.connect do |db|
+			case identifier.to_i
+			when 0 #should be a hash
 				db[@name].where(:hash => identifier).update(data)
+			else  #should be an id number.
+				db[@name].where(:id => identifier).update(data)
 			end
 		end
 	end

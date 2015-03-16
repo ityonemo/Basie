@@ -3,9 +3,17 @@ require_relative "base_interface"
 #POST intrepreter, creates a route for accepting POST instructions.
 class Basie::POSTInterface < Basie::Interface
 
+	def initialize(params={})
+		@route = "/db"
+
+		super(params)
+	end
+
 	def setup_paths(table)
 
-		app.post(data) do 
+		fullpath = "#{@route}/#{table.name}"
+
+		app.post(fullpath) do 
 			
 			#TODO:  Do a permissions check here.
 			#permissions_check()
@@ -33,16 +41,22 @@ class Basie::POSTInterface < Basie::Interface
 =end
 
 			#toss out parameters that aren't the ones we care about.
-			params.reject!{|col, val| !table.columns.has_key?(col)}
+			p = params.reject{|col, val| !table.columns.has_key?(col.to_sym)}
 
-			table.insert_data(params)
+			table.insert_data(p)
 
-			if params[:redirect] == nil
-				#if we haven't specified a redirect, redirect to the database object created.
-				redirect "/db/#{name}/#{hash}"
-			else
-				redirect params[:redirect]
-			end
+			"ok"
 		end
+
+		app.post(fullpath + "/:id") do |id|
+			#toss out parameters that aren't the ones we care about.
+
+			p = params.reject{|col, val| !table.columns.has_key?(col.to_sym)}
+
+			table.update_data(id, p)
+
+			"ok"
+		end
+
 	end
 end
