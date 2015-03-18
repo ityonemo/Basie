@@ -31,7 +31,7 @@ class POSTTest < Test::Unit::TestCase
     post "/db/simpletest", params = {:test => "three"}
 
     #make sure this responded ok
-    assert last_response.ok?
+    assert last_response.success?
 
     #make sure that the table looks as it should.
     assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"three"}], $BS.tables[:simpletest].entire_table
@@ -40,7 +40,7 @@ class POSTTest < Test::Unit::TestCase
   def test_post_update_data
     post "/db/simpletest/1", params = {:test => "substituted"}
     #make sure this responded ok
-    assert last_response.ok?
+    assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
     assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
   end
@@ -48,7 +48,8 @@ class POSTTest < Test::Unit::TestCase
   def test_post_update_data_with_hash
     post "/db/hashtest/G-qeUNuU2Ow8", params = {:content => "substituted"}
     #make sure this responded ok
-    assert last_response.ok?
+
+    assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
     assert_equal [{:hash=>"G-qeUNuU2Ow8",:content=>"substituted"},
                   {:hash=>"bL_u2i6J__oH",:content=>"test 2"},
@@ -61,17 +62,14 @@ class POSTTest < Test::Unit::TestCase
   def test_attempt_to_write_nonexistent_id
     post "/db/simpletest/3", params = {:test => "nonexistent"}
 
-    assert !last_response.ok?
-    #check the error type
-
-    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    assert_equal 404, last_response.status
   end
 
   def test_attempt_to_overwrite_id
     #this directive contains a sneaky attempt to write in an id.
     post "/db/simpletest/1", params = {:id=>4, :test => "substituted"}
     #make sure this responded ok
-    assert last_response.ok?
+    assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
     assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
   end
@@ -79,7 +77,7 @@ class POSTTest < Test::Unit::TestCase
   def test_attempt_to_overwrite_hash
     post "/db/hashtest/G-qeUNuU2Ow8", params = {:content => "substituted", :hash => "overwriteme"}
     #make sure this responded ok
-    assert last_response.ok?
+    assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
     assert_equal [{:hash=>"G-qeUNuU2Ow8",:content=>"substituted"},
                   {:hash=>"bL_u2i6J__oH",:content=>"test 2"},

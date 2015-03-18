@@ -22,8 +22,7 @@ class HashTest < Test::Unit::TestCase
   end
 
   def teardown
-    destroy :simpletest
-    destroy :hashtest
+    destroy [:simpletest, :hashtest]
     Basie.purge_interfaces
   end
 
@@ -110,6 +109,11 @@ class HashTest < Test::Unit::TestCase
     assert last_response.ok?
     assert_equal File.new("./results/hashtest-part.json").read, last_response.body
   end
+
+  ###########################################################################
+  ## TESTING DATA CREATION WITH HASHES
+
+  
 
   ###########################################################################
   ## TESTING AGAINST ADVERSARIAL CONDITIONS

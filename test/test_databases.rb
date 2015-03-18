@@ -2,18 +2,32 @@
 
 #common creation schemes for test databases.
 
+#forward the existence of the Basie class.
 class Basie; end
 
-$BS = {}
+#monkey-patch the MockResponse Class to give a "success?" readout which is agnostic to all forms of HTTP success (not just OK)
+class Rack::MockResponse
+  def success?
+    @status >= 200 && @status < 300
+  end
+end
 
+#declare a global singleton Basie object for convenience.
+$BS = Object.new
+
+#reflective create command.  Takes an array of symbols and makes tables.
 def create(tablename)
+  #allow us to pass either a single symbol or an array of symbols.
   if Symbol === tablename
     tablename = [tablename]
   end
 
   tablename.each do |table|
+    #standard creation protocol.
     $BS.connect{|db| db.drop_table?(table) }
     $BS.create table
+
+    #here is the reflective magic.  Defined below in this list is this thingy.
     $BS.connect {|db| eval "data_#{table} db"}
   end
 
@@ -21,10 +35,12 @@ def create(tablename)
 end
 
 def destroy(tablename)
+  #allow us to pass either a single symbol or an array of symbols.
   if Symbol === tablename
     tablename = [tablename]
   end
 
+  #standard deletion stuff
   $BS.connect do |db|
     tablename.each do |table|
       db.drop_table?(table)

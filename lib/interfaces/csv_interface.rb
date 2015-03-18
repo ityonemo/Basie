@@ -55,15 +55,27 @@ class Basie::CSVInterface < Basie::Interface
 		app.get (fullroute + '/:query') do |query|
 			content_type :csv
 
-			res = table.data_by_id(query)
-
-			Basie::CSVInterface.to_csv(res)
+			begin
+				res = table.data_by_id(query)
+				Basie::CSVInterface.to_csv(res)
+			rescue ArgumentError
+				400
+			rescue Basie::NoEntryError
+				404
+			end
 		end
 
 		app.get (fullroute + '/:column/:query') do |column, query|
-			res = table.data_by_query(column, query)
+			content_type :csv
 
-			Basie::CSVInterface.to_csv(res)
+			begin
+				res = table.data_by_query(column, query)
+				Basie::CSVInterface.to_csv(res)
+			rescue ArgumentError
+				400
+			rescue Basie::NoEntryError
+				404
+			end
 		end
 	end
 end

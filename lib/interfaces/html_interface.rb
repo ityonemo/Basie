@@ -231,8 +231,14 @@ class Basie::HTMLInterface < Basie::Interface
 		if (@@params[:routes] == :all || @params[:routes].include?(:id))
 			app.get (fullroute + "/:query") do |query|
 				#get the data
-				res = table.data_by_id(query)
-				haml Basie::HTMLInterface.to_dl(res, table)
+				begin
+					res = table.data_by_id(query)
+					haml Basie::HTMLInterface.to_dl(res, table)
+				rescue ArgumentError
+					400
+				rescue Basie::NoEntryError
+					404
+				end
 			end
 		end
 
@@ -252,8 +258,14 @@ class Basie::HTMLInterface < Basie::Interface
 		if (@@params[:routes] == :all || @params[:routes].include?(:query))
 			app.get (fullroute + "/:column/:query") do |column, query|
 				#get the data
-				res = table.data_by_query(column, query)
-				haml Basie::HTMLInterface.to_dl(res, table)
+				begin
+					res = table.data_by_query(column, query)
+					haml Basie::HTMLInterface.to_dl(res, table)
+				rescue ArgumentError
+					400
+				rescue Basie::NoEntryError
+					404
+				end
 			end
 		end
 
