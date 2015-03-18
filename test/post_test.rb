@@ -15,6 +15,7 @@ class POSTTest < Test::Unit::TestCase
   end
 
   def setup
+    $BS = Basie.new :name => "testdb"
     Basie.activate :POST
     create [:simpletest, :hashtest]
   end
@@ -56,6 +57,15 @@ class POSTTest < Test::Unit::TestCase
 
   #####################################################################################333
   ## SOME ADVERSARIAL TESTS
+
+  def test_attempt_to_write_nonexistent_id
+    post "/db/simpletest/3", params = {:test => "nonexistent"}
+
+    assert !last_response.ok?
+    #check the error type
+
+    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+  end
 
   def test_attempt_to_overwrite_id
     #this directive contains a sneaky attempt to write in an id.

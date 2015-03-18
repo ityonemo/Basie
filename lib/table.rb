@@ -119,6 +119,13 @@ class Basie::Table
 	end
 	private :parse_column
 
+
+	##########################################################################
+	## HASH-EY FUNCTIONS
+	def is_hash?(string)
+		(string.length == @basie.settings[:hashlen]) && ( /([\w\-\_]*)/.match(string)[1].length == @basie.settings[:hashlen])
+	end
+
 	def hashgen(id)
 		#generates a hash given an id for the table.
 		Base64.urlsafe_encode64(Digest::SHA256.digest(@basie.settings[:hashsalt] + @name.to_s + id.to_s))[0...@basie.settings[:hashlen]]

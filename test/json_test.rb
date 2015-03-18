@@ -15,6 +15,7 @@ class JSONTest < Test::Unit::TestCase
   end
 
   def setup
+    $BS = Basie.new :name => "testdb"
     Basie.activate :JSON
     create :simpletest
   end

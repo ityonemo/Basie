@@ -17,15 +17,13 @@ class TableTest < Test::Unit::TestCase
   #TEST CREATING A TABLE.  These methods should emanate from the basie object.
 
   def test_create_table_no_symbol_argument
-    bs = Basie.new :name => "testdb"
     #should not create a blank table
-    assert_raise(ArgumentError){bs.create "wrong input"}
+    assert_raise(ArgumentError){$BS.create "wrong input"}
   end
 
   def test_create_table_no_definition_file
-    bs = Basie.new :name => "testdb"
     #create a blank table, with a primary key and a single element.
-    assert_raise(Errno::ENOENT){bs.create :nofile}
+    assert_raise(Errno::ENOENT){$BS.create :nofile}
   end
 
   ##################################################################
@@ -46,55 +44,50 @@ class TableTest < Test::Unit::TestCase
   end
 
   def test_create_table_using_symbol
-    bs = Basie.new :name => "testdb"
-    bs.create :simpletest
-    simpletest_tests(bs)
+    $BS = Basie.new :name => "testdb"
+    $BS.create :simpletest
+    simpletest_tests($BS)
   end
 
   def test_create_table_alt_directory
-    bs = Basie.new :name => "testdb", :tabledir => "tables_alt"
-    bs.create :simpletest
-    simpletest_tests(bs)
+    $BS = Basie.new :name => "testdb", :tabledir => "tables_alt"
+    $BS.create :simpletest
+    simpletest_tests($BS)
   end
 
   def test_create_table_passing_path
-    bs = Basie.new :name => "testdb"
-    bs.create :simpletest, :path => File.join(Dir.pwd, "tables/simpletest.basie")
-    simpletest_tests(bs)
+    $BS = Basie.new :name => "testdb"
+    $BS.create :simpletest, :path => File.join(Dir.pwd, "tables/simpletest.basie")
+    simpletest_tests($BS)
   end
 
   def test_create_table_passing_file
-    bs = Basie.new :name => "testdb"
-    bs.create :simpletest, :file => File.new(File.join(Dir.pwd, "tables/simpletest.basie"))
-    simpletest_tests(bs)
+    $BS = Basie.new :name => "testdb"
+    $BS.create :simpletest, :file => File.new(File.join(Dir.pwd, "tables/simpletest.basie"))
+    simpletest_tests($BS)
   end
 
   def test_create_table_passing_string
-    bs = Basie.new :name => "testdb"
-    bs.create :simpletest, :definition => File.new(File.join(Dir.pwd, "tables/simpletest.basie")).read
-    simpletest_tests(bs)
+    $BS = Basie.new :name => "testdb"
+    $BS.create :simpletest, :definition => File.new(File.join(Dir.pwd, "tables/simpletest.basie")).read
+    simpletest_tests($BS)
   end
 
   #########################################################################################33
   ## TESTING ACCESSORS
 
   def test_entire_table
+    $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
     destroy :simpletest
   end
 
   def test_data_by_id
+    $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_id(1))
     destroy :simpletest
-  end
-
-  def test_data_by_hash
-    create :hashtest
-    assert_equal(({:hash=>"G-qeUNuU2Ow8", :content=>"test 1"}), $BS.tables[:hashtest].data_by_id(1))
-    assert_equal(({:hash=>"G-qeUNuU2Ow8", :content=>"test 1"}), $BS.tables[:hashtest].data_by_id("G-qeUNuU2Ow8"))
-    destroy :hashtest
   end
 
   def test_data_by_search
@@ -104,50 +97,52 @@ class TableTest < Test::Unit::TestCase
   end
 
   def test_data_by_query
+    $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_query(:test, "one"))
     destroy :simpletest
   end
 
   def test_insert_data_hash
-    bs = Basie.new :name => "testdb"
-    bs.connect{|db| db.drop_table? :simpletest}
-    bs.create :simpletest
-    bs.tables[:simpletest].insert_data(:test => "one")
-    assert_equal [{:id=>1, :test=>"one"}], bs.tables[:simpletest].entire_table
-    bs.connect {|db| db.drop_table(:simpletest)}
+    $BS = Basie.new :name => "testdb"
+    $BS.connect{|db| db.drop_table? :simpletest}
+    $BS.create :simpletest
+    $BS.tables[:simpletest].insert_data(:test => "one")
+    assert_equal [{:id=>1, :test=>"one"}], $BS.tables[:simpletest].entire_table
+    $BS.connect {|db| db.drop_table(:simpletest)}
   end
 
   def test_insert_data_array
-    bs = Basie.new :name => "testdb"
-    bs.connect{|db| db.drop_table? :simpletest}
-    bs.create :simpletest
-    bs.tables[:simpletest].insert_data([{:test => "one"},{:test => "two"}])
-    assert_equal [{:id=>1, :test=>"one"}, {:id=>2, :test=>"two"}], bs.tables[:simpletest].entire_table
-    bs.connect {|db| db.drop_table(:simpletest)}
+    $BS = Basie.new :name => "testdb"
+    $BS.connect{|db| db.drop_table? :simpletest}
+    $BS.create :simpletest
+    $BS.tables[:simpletest].insert_data([{:test => "one"},{:test => "two"}])
+    assert_equal [{:id=>1, :test=>"one"}, {:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    $BS.connect {|db| db.drop_table(:simpletest)}
   end
 
   def test_update_data_by_id
-    bs = Basie.new :name => "testdb"
-    bs.connect{|db| db.drop_table? :simpletest}
-    bs.create :simpletest
-    bs.tables[:simpletest].insert_data(:test => "one")
-    assert_equal [{:id=>1, :test=>"one"}], bs.tables[:simpletest].entire_table
-    bs.tables[:simpletest].update_data(1, {:test => "two"})
-    assert_equal [{:id=>1, :test=>"two"}], bs.tables[:simpletest].entire_table
-    bs.connect {|db| db.drop_table(:simpletest)}
+    $BS = Basie.new :name => "testdb"
+    create :simpletest
+    $BS.tables[:simpletest].update_data(1, {:test => "substituted"})
+    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    destroy :simpletest
   end
 
-  def test_update_data_by_hash
-    bs = Basie.new :name => "testdb"
-    bs.connect{|db| db.drop_table? :hashtest}
-    bs.create :hashtest
-    bs.tables[:hashtest].insert_data(:content => "test 1")
-    assert_equal [{:hash=>"G-qeUNuU2Ow8", :content=>"test 1"}], bs.tables[:hashtest].entire_table
-    bs.tables[:hashtest].update_data(1, {:content => "test 2"})
-    assert_equal [{:hash=>"G-qeUNuU2Ow8", :content=>"test 2"}], bs.tables[:hashtest].entire_table
-    bs.tables[:hashtest].update_data("G-qeUNuU2Ow8", {:content => "test 3"})
-    assert_equal [{:hash=>"G-qeUNuU2Ow8", :content=>"test 3"}], bs.tables[:hashtest].entire_table
-    bs.connect {|db| db.drop_table(:hashtest)}
+  #############################################################################3
+  ## ADVERSARIAL TESTING
+
+  def test_retrieve_data_nonexistent_id
+    $BS = Basie.new :name => "testdb"
+    create :simpletest
+    assert_raise (Basie::NoIdError){$BS.tables[:simpletest].data_by_id(4)}
+    destroy :simpletest
+  end
+
+  def test_update_data_nonexistent_id
+    $BS = Basie.new :name => "testdb"
+    create :simpletest
+    assert_raise (Basie::NoIdError){$BS.tables[:simpletest].update_data(4, {:test => "substituted"})}
+    destroy :simpletest
   end
 end

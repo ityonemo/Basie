@@ -7,8 +7,6 @@ class Basie; end
 $BS = {}
 
 def create(tablename)
-  $BS = Basie.new :name => "testdb"
-
   if Symbol === tablename
     tablename = [tablename]
   end

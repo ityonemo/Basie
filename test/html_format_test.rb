@@ -19,6 +19,7 @@ class HTMLFormatTest < Test::Unit::TestCase
   ##### PLAYING WITH CSS
 
   def set_up(params = {})
+    $BS = Basie.new :name => "testdb"
     Basie.purge_interfaces
     Basie.activate :HTML, params
 

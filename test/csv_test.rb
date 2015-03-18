@@ -16,14 +16,13 @@ class CSVTest < Test::Unit::TestCase
   end
 
   def setup
+    $BS = Basie.new :name => "testdb"
     Basie.activate :CSV
-
     create :simpletest
   end
 
   def teardown
     destroy :simpletest
-
     Basie.purge_interfaces
   end
 

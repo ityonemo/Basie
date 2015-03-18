@@ -2,6 +2,8 @@
 #adds additional, common table accessor features to the table class.
 #segregated from the main Basie::Table object for code organization purposes.
 
+require_relative 'basie_errors'
+
 #forward the existence of the Basie class
 class Basie; end
 
@@ -32,13 +34,19 @@ class Basie::Table
 	end
 
 	def data_by_id(id)
+		res = nil
 		#returns the table data by row id (primary or hash key)
 		@basie.connect do |db|
 			case id.to_i		#use the to_i function to assess if it's a hash or not.			
 			when 0
-				db.fetch("SELECT #{csel} from #{@name} WHERE hash = '#{id}'").first
+				unless is_hash?(id)
+					raise(Basie::HashError, "bad input")
+				end
+				res = db.fetch("SELECT #{csel} from #{@name} WHERE hash = '#{id}'").first
+				res == nil ? (raise Basie::NoHashError.new("id not found")) : res
 			else
-				db.fetch("SELECT #{csel} FROM #{@name} WHERE id = '#{id}'").first
+				res = db.fetch("SELECT #{csel} FROM #{@name} WHERE id = '#{id}'").first
+				res == nil ? (raise Basie::NoIdError.new("hash not found")) : res
 			end
 		end
 	end
@@ -84,9 +92,16 @@ class Basie::Table
 		@basie.connect do |db|
 			case identifier.to_i
 			when 0 #should be a hash
-				db[@name].where(:hash => identifier).update(data)
+
+				unless is_hash?(identifier)
+					raise(Basie::HashError, "bad input")
+				end
+
+				res = db[@name].where(:hash => identifier).update(data)
+				res == 0 ? raise(Basie::NoHashError, "hash doesn't exist") : res
 			else  #should be an id number.
-				db[@name].where(:id => identifier).update(data)
+				res = db[@name].where(:id => identifier).update(data)
+				res == 0 ? raise(Basie::NoIdError, "id doesn't exist") : res
 			end
 		end
 	end

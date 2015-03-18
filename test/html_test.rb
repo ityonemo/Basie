@@ -16,6 +16,7 @@ class HTMLTest < Test::Unit::TestCase
   end
 
   def setup
+    $BS = Basie.new :name => "testdb"
     Basie.activate :HTML
     create [:simpletest, :complextest, :urltest, :emailtest, :teltest]
   end
