@@ -24,7 +24,7 @@ class ForeignTest < Test::Unit::TestCase
     $BS.cleanup
   end
 
-  def test_foreign_json	
+  def test_foreign_basic	
 
   	get('/json/lefttest')
 
@@ -37,6 +37,11 @@ class ForeignTest < Test::Unit::TestCase
 
   	assert last_response.ok?
   	assert_equal File.new("./results/foreigntest.ml").read, last_response.body
+
+    get ('/html/lefttest/1')
+    assert last_response.ok?
+    assert_equal File.new("./results/foreigntest-part.ml").read, last_response.body
+
   end
 
   def test_foreign_csv
@@ -50,5 +55,9 @@ class ForeignTest < Test::Unit::TestCase
     get('/html/lefttest_nolink')
     assert last_response.ok?
     assert_equal File.new("./results/foreigntest-nolink.ml").read, last_response.body
+
+    get ('/html/lefttest_nolink/1')
+    assert last_response.ok?
+    assert_equal File.new("./results/foreigntest-part-nolink.ml").read, last_response.body
   end
 end
