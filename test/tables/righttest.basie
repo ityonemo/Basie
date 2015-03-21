@@ -1,0 +1,3 @@
+#basie test foreignkeys right table
+primary_key	:id
+String		:rightcontent

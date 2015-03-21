@@ -110,8 +110,8 @@ class Basie::Table
 	private :parse_setting
 
 	def parse_column(line)
-		#scan the line.
-		cl = Basie::Column.new line
+		#scan the line, pass the current table.
+		cl = Basie::Column.new line, self
 
 		#check to make sure this wasn't a blank line with no content.
 		@columns[cl.name] = cl

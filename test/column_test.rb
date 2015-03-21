@@ -27,6 +27,6 @@ class ColumnTest < Test::Unit::TestCase
   end
 
   def test_column_primary_key_not_id
-  	assert_raise(Basie::DefinitionError){cl = Basie::Column.new("primary_key :blah")}
+  	assert_raise(Basie::PrimaryKeyError){cl = Basie::Column.new("primary_key :blah")}
   end
 end

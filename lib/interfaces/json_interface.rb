@@ -1,10 +1,11 @@
+require 		'json'
 require_relative "base_interface"
 
 #A JSON intrepreter for basie.
 class Basie::JSONInterface < Basie::Interface
 
 	def initialize(params={})
-		@route = "/json"
+		@root = "/json"
 
 		#register the JSON mime type with the application.
 		app.configure do
@@ -14,11 +15,19 @@ class Basie::JSONInterface < Basie::Interface
 		super(params)
 	end
 
+	#################
+	#ROUTE OPTIONS:
+	# :all      -all routes
+	# :table    -get the full table
+	# :id       -get a row by id (or hash)
+	# :search   -search for a row
+	# :query    -search for a row by query
+
 	#JSON does nothing special for the table and column readings.  So we may skip directly to:
 
 	def setup_paths(table)
 		#table should be a symbol to the name of the table.
-		fullroute = "#{@route}/#{table.name}"
+		tableroot = "#{@root}/#{table.name}"
 
 		##############################################################
 		## JSON-BASED data access.
@@ -27,32 +36,40 @@ class Basie::JSONInterface < Basie::Interface
 		## /json/[name]/[column]/[match] - queries all database rows that match expected
 
 		#register a path to the table.
-		app.get (fullroute) do
-			content_type :json
-			table.entire_table.to_json
-		end
-
-		app.get (fullroute + '/:query') do |query|
-			content_type :json
-
-			begin
-				table.data_by_id(query).to_json
-			rescue ArgumentError
-				400
-			rescue Basie::NoEntryError
-				404
+		route_check(:table) do
+			app.get (tableroot) do
+				content_type :json
+				table.entire_table.to_json
 			end
 		end
 
-		app.get (fullroute + "/:column/:query") do |column, query|
-			content_type :json
+		route_check(:id) do
+			app.get (tableroot + '/:id') do |id|
+				begin
+					content_type :json
+					table.data_by_id(id).to_json
+				rescue ArgumentError
+					400
+				rescue Basie::NoEntryError
+					404
+				end
+			end
+		end
 
-			begin
-				table.data_by_query(column, query).to_json
-			rescue ArgumentError
-				400
-			rescue Basie::NoEntryError
-				404
+		route_check(:search) do
+			#nothing, for now.
+		end
+
+		route_check(:query) do
+			app.get (tableroot + "/:column/:query") do |column, query|
+				begin
+					content_type :json
+					table.data_by_query(column, query).to_json
+				rescue ArgumentError
+					400
+				rescue Basie::NoEntryError
+					404
+				end
 			end
 		end
 	end

@@ -16,6 +16,10 @@ class TableTest < Test::Unit::TestCase
 
   #TEST CREATING A TABLE.  These methods should emanate from the basie object.
 
+  def teardown
+    $BS.cleanup
+  end
+
   def test_create_table_no_symbol_argument
     #should not create a blank table
     assert_raise(ArgumentError){$BS.create "wrong input"}
@@ -37,9 +41,6 @@ class TableTest < Test::Unit::TestCase
     bs.connect do |db|
       assert_equal    [:simpletest],          db.tables
       assert_equal    [:id, :test],           db[:simpletest].columns
-      #take down the table
-      db.drop_table(:simpletest)
-      assert_equal    [],                     db.tables
     end
   end
 
@@ -80,14 +81,12 @@ class TableTest < Test::Unit::TestCase
     $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
-    destroy :simpletest
   end
 
   def test_data_by_id
     $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_id(1))
-    destroy :simpletest
   end
 
   def test_data_by_search
@@ -100,7 +99,6 @@ class TableTest < Test::Unit::TestCase
     $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_query(:test, "one"))
-    destroy :simpletest
   end
 
   def test_insert_data_hash
@@ -109,7 +107,6 @@ class TableTest < Test::Unit::TestCase
     $BS.create :simpletest
     $BS.tables[:simpletest].insert_data(:test => "one")
     assert_equal [{:id=>1, :test=>"one"}], $BS.tables[:simpletest].entire_table
-    $BS.connect {|db| db.drop_table(:simpletest)}
   end
 
   def test_insert_data_array
@@ -118,7 +115,6 @@ class TableTest < Test::Unit::TestCase
     $BS.create :simpletest
     $BS.tables[:simpletest].insert_data([{:test => "one"},{:test => "two"}])
     assert_equal [{:id=>1, :test=>"one"}, {:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
-    $BS.connect {|db| db.drop_table(:simpletest)}
   end
 
   def test_update_data_by_id
@@ -126,7 +122,6 @@ class TableTest < Test::Unit::TestCase
     create :simpletest
     $BS.tables[:simpletest].update_data(1, {:test => "substituted"})
     assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
-    destroy :simpletest
   end
 
   #############################################################################3
@@ -136,13 +131,11 @@ class TableTest < Test::Unit::TestCase
     $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_raise (Basie::NoIdError){$BS.tables[:simpletest].data_by_id(4)}
-    destroy :simpletest
   end
 
   def test_update_data_nonexistent_id
     $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_raise (Basie::NoIdError){$BS.tables[:simpletest].update_data(4, {:test => "substituted"})}
-    destroy :simpletest
   end
 end

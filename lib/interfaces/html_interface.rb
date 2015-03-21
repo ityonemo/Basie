@@ -5,12 +5,15 @@ require 'haml'
 class Basie::HTMLInterface < Basie::Interface
 
 	def initialize(params={})
-		@route = "/html"
+		@root = "/html"
+		@formroot = params[:formroot] || "/htmlform"
+		params[:formroot] = params[:formroot] || @formroot
+
 		super(params)
 
-		#set a default route parameter.
-		params[:routes] = params[:routes] || :all
-
+		#parameters has to be a class variable because it will be accessed
+		#by some universal converter functions.  This is OK, though, because
+		#basie interfaces are singletons.  consider fixing this to be less hacky.
 		@@params = params
 	end
 
@@ -60,7 +63,9 @@ class Basie::HTMLInterface < Basie::Interface
 
 
 	def self.hinsert(table, cname, val, indents)
-		case table.columns[cname].params[:htag]
+		column = table.columns[cname]
+
+		case column.params[:htag]
 		when :url
 			"\n" + "\t" * indents + "%a(href=\"#{val}\") "
 		when :email
@@ -69,7 +74,13 @@ class Basie::HTMLInterface < Basie::Interface
 			tval = val.split(/\D/).join
 			"\n" + "\t" * indents + "%a(href=\"tel:#{tval}\") "
 		else
-			""
+			#check to see if we're a foreign key
+			if (column.params[:link]) && (column.type == :foreign_key)
+				key_ref = table.foreignkeys[cname]
+				"\n" + "\t" * indents + "%a(href=\"#{@@params[:root]}/#{key_ref}/#{val}\") "
+			else
+				""
+			end
 		end
 	end
 
@@ -194,10 +205,18 @@ class Basie::HTMLInterface < Basie::Interface
 	}
 	def parse_for_column(column, columnsettings)
 
+		#set this to be initially true.
+		column.params[:link] = true
+
 		columnsettings.each do |statement|
 			#check to see if this is an htag statement.
 			if @@htaghash.has_key?(statement)
 				column.params[:htag] = @@htaghash[statement]
+			end
+
+			#check to see if this is a no_link statement
+			if statement == "nolink"
+				column.params[:link] = false
 			end
 		end
 
@@ -210,7 +229,7 @@ class Basie::HTMLInterface < Basie::Interface
 	def setup_paths(table)
 
 		#table should be a symbol to the name of the table.
-		fullroute = "#{@route}/#{table.name}"
+		tableroot = "#{@root}/#{table.name}"
 
 		##############################################################
 		## HTML-BASED data access.
@@ -219,17 +238,18 @@ class Basie::HTMLInterface < Basie::Interface
 		## /html/[name]/[column]/[match] - queries all database rows that match expected
 
 		#register a path to the table.
-		if (@@params[:routes] == :all || @params[:routes].include?(:table))
-			app.get (fullroute) do
+		route_check(:table) do
+			app.get (tableroot) do
 				#get the data
 				res = table.entire_table
+
 				haml Basie::HTMLInterface.to_table(res, table)
 			end
 		end
 
-		#register a path to just id stuff
-		if (@@params[:routes] == :all || @params[:routes].include?(:id))
-			app.get (fullroute + "/:query") do |query|
+		route_check(:id) do
+			#register for id-based searching.
+			app.get (tableroot + "/:query") do |query|
 				#get the data
 				begin
 					res = table.data_by_id(query)
@@ -242,21 +262,24 @@ class Basie::HTMLInterface < Basie::Interface
 			end
 		end
 
+		route_check(:search) do
 =begin
 		#register a path for searching
-		if (@@params[:routes] == :all || @params[:routes].include?(:search))
+		if (@@params[:routes] == :all || @@params[:routes].include?(:search))
 			#TODO:  IMPLEMENT DEFAULT SEARCHABLE COLUMNS
 
-			app.get (fullroute + "/:query") do |query|
+			app.get (tableroot + "/:query") do |query|
 				#get the data
 				res = table.data_by_id(query)
 				haml Basie::HTMLInterface.to_dl(res, table)
 			end
 		end
 =end
+		end
+
 		#register a path for querying
-		if (@@params[:routes] == :all || @params[:routes].include?(:query))
-			app.get (fullroute + "/:column/:query") do |column, query|
+		route_check(:query) do
+			app.get(tableroot + "/:column/:query") do |column, query|
 				#get the data
 				begin
 					res = table.data_by_query(column, query)
@@ -269,14 +292,18 @@ class Basie::HTMLInterface < Basie::Interface
 			end
 		end
 
-		#register a path for inputting data
-		app.get ("/htmlform/#{table.name}") do
-			haml Basie::HTMLInterface.to_if(table)
-		end
+		#register a path for inputting and modifying data
+		route_check(:forms) do
+			tableformroot = "#{@formroot}/#{table.name}"
 
-		app.get ("/htmlform/#{table.name}/:query") do |query|
-			res = table.data_by_id(query)
-			haml Basie::HTMLInterface.to_if(table, res)
+			app.get (tableformroot) do
+				haml Basie::HTMLInterface.to_if(table)
+			end
+
+			app.get (tableformroot + "/:query") do |query|
+				res = table.data_by_id(query)
+				haml Basie::HTMLInterface.to_if(table, res)
+			end
 		end
 	end
 end

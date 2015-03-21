@@ -4,7 +4,7 @@ require_relative "base_interface"
 class Basie::CSVInterface < Basie::Interface
 
 	def initialize(params={})
-		@route = "/csv"
+		@root = "/csv"
 
 		#register the JSON mime type with the application.
 		app.configure do
@@ -35,7 +35,7 @@ class Basie::CSVInterface < Basie::Interface
 
 	def setup_paths(table)
 		#table should be a symbol to the name of the table.
-		fullroute = "#{@route}/#{table.name}"
+		tableroot = "#{@root}/#{table.name}"
 
 		##############################################################
 		## JSON-BASED data access.
@@ -44,37 +44,41 @@ class Basie::CSVInterface < Basie::Interface
 		## /json/[name]/[column]/[match] - queries all database rows that match expected
 
 		#register a path to the table.
-		app.get (fullroute) do
-			content_type :csv
+		route_check(:table) do
+			app.get (tableroot) do
+				content_type :csv
 
-			res = table.entire_table
+				res = table.entire_table
 
-			Basie::CSVInterface.to_csv(res)
-		end
-
-		app.get (fullroute + '/:query') do |query|
-			content_type :csv
-
-			begin
-				res = table.data_by_id(query)
 				Basie::CSVInterface.to_csv(res)
-			rescue ArgumentError
-				400
-			rescue Basie::NoEntryError
-				404
 			end
 		end
 
-		app.get (fullroute + '/:column/:query') do |column, query|
-			content_type :csv
+		route_check(:id) do
+			app.get (tableroot + '/:id') do |id|
+				begin
+					content_type :csv
+					res = table.data_by_id(id)
+					Basie::CSVInterface.to_csv(res)
+				rescue ArgumentError
+					400
+				rescue Basie::NoEntryError
+					404
+				end
+			end
+		end
 
-			begin
-				res = table.data_by_query(column, query)
-				Basie::CSVInterface.to_csv(res)
-			rescue ArgumentError
-				400
-			rescue Basie::NoEntryError
-				404
+		route_check(:query) do
+			app.get (tableroot + '/:column/:query') do |column, query|
+				begin
+					content_type :csv
+					res = table.data_by_query(column, query)
+					Basie::CSVInterface.to_csv(res)
+				rescue ArgumentError
+					400
+				rescue Basie::NoEntryError
+					404
+				end
 			end
 		end
 	end

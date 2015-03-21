@@ -157,4 +157,17 @@ class Basie
 			interface.setup_paths table
 		end
 	end
+
+	#an internal procedure that disposes of all of Basie's tables and views in an orderly fashion.
+	#this mostly exists for testing purposes.
+	def cleanup
+		#do things in reverse.
+		connect do
+			@tables.keys.reverse_each do |table|
+				#first just drop the table.
+				db.drop_table?(table)
+				#then drop the views.
+			end
+		end
+	end
 end

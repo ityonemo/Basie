@@ -4,9 +4,15 @@
 class Basie::Column
 	attr_reader :name		#column name
 	attr_reader :type		#column type
+	attr_reader :table		#column's parent table
+	attr_reader :basie 		#column's parent basie
 	attr_reader :params		#hash of parameter strings.
 
-	def initialize(columnline)
+	def initialize(columnline, table = nil)
+		#set our parent reference values
+		@table = table
+		if @table; @basie = @table.basie; end
+
 		#check to make sure our columnline is not blank
 		if columnline.strip.length == 0
 			raise Basie::DefinitionError, "Basie Column Definitions must not be blank"
@@ -33,7 +39,20 @@ class Basie::Column
 		#other consistency checks.
 		#first, primary key should have name id.
 		if (@type == :primary_key) && (@name != :id)
-			raise Basie::DefinitionError, "Basie primary keys must be named \"id\""
+			raise Basie::PrimaryKeyError, "Basie primary keys must be named \"id\""
+		end
+		#second, foreign keys should exist.
+		if (@type == :foreign_key)
+			#retrieve the foreign key from the parsing of the line.
+			fname = dbtokens[2][/\w+/].to_sym
+
+			#do a consistency check here.
+			unless @basie.tables.has_key?(fname)
+				raise Basie::NoTableError, "Basie foreign key doesn't exist"
+			end
+
+			#we're ok. so set the table's foreign key store.
+			@table.foreignkeys[@name] = fname
 		end
 	end
 
@@ -81,7 +100,7 @@ class Basie::Column
 				end
 			end
 		else
-			raise Basie::DefinitionError, "unidentified column type class: " + typetoken
+			raise Basie::BadTypeError, "unidentified column type class: " + typetoken
 		end	
 	end
 	private :type_of

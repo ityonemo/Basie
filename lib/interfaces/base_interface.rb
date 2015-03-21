@@ -11,16 +11,28 @@ class Basie::Interface
 
 	#a skeleton constructor makes sure this winds up in the interpreter list.
 	def initialize(params = {})
-		#allow the user to set the route as an override to whatever default is set by the constructor
-		if params.has_key?(:route)
-			@route = params[:route]
+		#allow the user to set the root as an override to whatever default is set by the constructor
+		if params.has_key?(:root)
+			@root = params[:root]
+		else
+			params[:root] = @root
 		end
+
+		#allow the user to set an array of routes, but if this is omitted, then set it to the token "all"
+		@routes = params[:routes] || :all
 
 		#check to see if we've already registered this interpreter.
 		unless Basie.interfaces.any?{|i| self.class === i}
 			Basie.interfaces.push self
 		end
 		#otherwise silently fail.
+	end
+
+	#a quick little thing that lets us encapsulate if the user has specified we should use this route.
+	def route_check(route)
+		if (@routes == :all) || (@routes.include?(route))
+			yield
+		end
 	end
 
 	#gives you a context in which you can parse parameters given to a table setting.

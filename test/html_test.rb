@@ -22,7 +22,7 @@ class HTMLTest < Test::Unit::TestCase
   end
 
   def teardown
-    destroy [:simpletest, :complextest, :urltest, :emailtest, :teltest]
+    $BS.cleanup
     Basie.purge_interfaces
   end
 

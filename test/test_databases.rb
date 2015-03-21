@@ -24,7 +24,6 @@ def create(tablename)
 
   tablename.each do |table|
     #standard creation protocol.
-    $BS.connect{|db| db.drop_table?(table) }
     $BS.create table
 
     #here is the reflective magic.  Defined below in this list is this thingy.
@@ -32,20 +31,6 @@ def create(tablename)
   end
 
   $BS
-end
-
-def destroy(tablename)
-  #allow us to pass either a single symbol or an array of symbols.
-  if Symbol === tablename
-    tablename = [tablename]
-  end
-
-  #standard deletion stuff
-  $BS.connect do |db|
-    tablename.each do |table|
-      db.drop_table?(table)
-    end
-  end
 end
 
 def data_simpletest(db)
@@ -82,8 +67,17 @@ def data_complextest(db)
   #nothing.  This test just tests html input system
 end
 
-def data_foreign_left(db)
+def data_lefttest(db)
+  db[:lefttest].insert(:leftcontent => "left 1", :right => 1)
+  db[:lefttest].insert(:leftcontent => "left 2", :right => 2)
 end
 
-def data_foreign_right(db)
+def data_righttest(db)
+  db[:righttest].insert(:rightcontent => "right 1")
+  db[:righttest].insert(:rightcontent => "right 2")
+end
+
+def data_lefttest_nolink(db)
+  db[:lefttest_nolink].insert(:leftcontent => "left 1", :right => 1)
+  db[:lefttest_nolink].insert(:leftcontent => "left 2", :right => 2)
 end

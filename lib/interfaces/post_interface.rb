@@ -4,16 +4,16 @@ require_relative "base_interface"
 class Basie::POSTInterface < Basie::Interface
 
 	def initialize(params={})
-		@route = "/db"
+		@root = "/db"
 
 		super(params)
 	end
 
 	def setup_paths(table)
 
-		fullpath = "#{@route}/#{table.name}"
+		tableroot = "#{@root}/#{table.name}"
 
-		app.post(fullpath) do 
+		app.post(tableroot) do 
 			
 			#TODO:  Do a permissions check here.
 			#permissions_check()
@@ -47,7 +47,7 @@ class Basie::POSTInterface < Basie::Interface
 			201
 		end
 
-		app.post(fullpath + "/:id") do |id|
+		app.post(tableroot + "/:id") do |id|
 			#toss out parameters that aren't the ones we care about. Also drop out :id and :hash parameters in case of adversarial attempts
 			p = params.reject{|col, val| c = col.to_sym; (!table.columns.has_key?(c) || c == :id || c == :hash)}
 

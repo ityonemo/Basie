@@ -22,7 +22,7 @@ class CSVTest < Test::Unit::TestCase
   end
 
   def teardown
-    destroy :simpletest
+    $BS.cleanup
     Basie.purge_interfaces
   end
 

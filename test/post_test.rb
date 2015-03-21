@@ -21,7 +21,7 @@ class POSTTest < Test::Unit::TestCase
   end
 
   def teardown
-    destroy [:simpletest, :hashtest]
+    $BS.cleanup
     Basie.purge_interfaces
   end
 
