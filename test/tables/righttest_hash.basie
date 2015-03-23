@@ -1,0 +1,5 @@
+#basie test foreignkeys with hash right table
+#use_hash
+primary_key	:id
+String		:hash			#hash
+String		:rightcontent

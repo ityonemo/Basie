@@ -81,3 +81,17 @@ def data_lefttest_nolink(db)
   db[:lefttest_nolink].insert(:leftcontent => "left 1", :right => 1)
   db[:lefttest_nolink].insert(:leftcontent => "left 2", :right => 2)
 end
+
+def data_righttest_hash(db)
+  ids = []
+
+  ids.push db[:righttest_hash].insert(:rightcontent => "right 1")
+  ids.push db[:righttest_hash].insert(:rightcontent => "right 2")
+
+  ids.each{|i| $BS.tables[:righttest_hash].brandhash(i)}
+end
+
+def data_lefttest_hash(db)
+  db[:lefttest_hash].insert(:leftcontent => "left 1", :right => 1)
+  db[:lefttest_hash].insert(:leftcontent => "left 2", :right => 2)
+end

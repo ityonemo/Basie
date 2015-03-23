@@ -17,3 +17,4 @@ require_relative 'post_test'
 #testing more sophisticated features
 require_relative 'hash_test'
 require_relative 'foreign_test'
+require_relative 'foreign_hash_test'

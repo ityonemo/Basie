@@ -25,28 +25,23 @@ class ForeignTest < Test::Unit::TestCase
   end
 
   def test_foreign_basic	
-
   	get('/json/lefttest')
-
   	assert last_response.ok?
   	assert_equal File.new("./results/foreigntest.json").read, last_response.body
   end
 
   def test_foreign_html
   	get ('/html/lefttest')
-
   	assert last_response.ok?
   	assert_equal File.new("./results/foreigntest.ml").read, last_response.body
 
     get ('/html/lefttest/1')
     assert last_response.ok?
     assert_equal File.new("./results/foreigntest-part.ml").read, last_response.body
-
   end
 
   def test_foreign_csv
   	get ('/csv/lefttest')
-
   	assert last_response.ok?
   	assert_equal File.new("./results/foreigntest.csv").read, last_response.body
   end
