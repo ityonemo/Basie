@@ -9,6 +9,25 @@ class Basie; end
 
 class Basie::Table 
 
+	def process(r)
+		case r 
+		when Array
+			r.map{|v| process(v)}
+		when Hash
+			#then swap out the subscripted key for the normal key.
+			temp = {}
+			r.each_key do |k|
+				ks = k.to_s
+				if ks[-1] == "_"
+					temp[ks[0...-1].to_sym] = r[k]
+				else
+					temp[k] = r[k]
+				end
+			end
+			temp
+		end
+	end
+
 	def csel
 		#returns a select string that corresponds to an 'adjusted' select statement
 		#two things must be done.  
@@ -16,33 +35,55 @@ class Basie::Table
 		#2.		foreign_key must be substituted if the foreign use_hash is activated.
 
 		#primary key stuff
-		if settings[:use_hash]
-			columns.keys.map{|k| k.to_s}.join(", ")
+
+		if @settings[:use_hash]
+			c = columns
 		else
-			"*"
+			c = columns(true)
 		end
+
+		c.keys.map do |k|
+			if (@foreignkeys.has_key?(k) && @basie.tables[@foreignkeys[k]].settings[:use_hash])
+				"#{@name}_#{k}_lookup.hash AS #{k}_"
+			else
+				"#{@name}.#{k}"
+			end
+		end.join(", ")
 	end
+
+	def select_modifier_strings
+		#joins and selects and as that substitutes in the table.
+		join = @foreignkeys.keys.reject{|k| !@basie.tables[@foreignkeys[k]].settings[:use_hash]}
+			.map do |k|
+				fname = @foreignkeys[k] 
+				"LEFT JOIN #{@name}_#{k}_lookup ON #{@name}.#{k}=#{@name}_#{k}_lookup.id"
+			end.join(' ')
+		join
+	end
+	private :select_modifier_strings
 
 	def entire_table
 		#returns the entire table as a ruby object.
 		@basie.connect do |db|
 			#TODO:  Do a permissions check here.
 
-			#TODO:  Repair this so that it deals with special situations, foreign keys, etc.
-			db.fetch("SELECT #{csel} FROM #{@name}").all
+			join = select_modifier_strings
+			select = "SELECT #{csel} FROM #{@name} #{join}"
+			process(db.fetch(select).all)
 		end
 	end
 
 	def data_by_id(id)
 		res = nil
 		#returns the table data by row id (primary or hash key)
+
 		@basie.connect do |db|
 			case id.to_i		#use the to_i function to assess if it's a hash or not.			
 			when 0
-				unless is_hash?(id)
+				unless (is_hash?(id) && @settings[:use_hash])
 					raise(Basie::HashError, "bad input")
 				end
-				res = db.fetch("SELECT #{csel} from #{@name} WHERE hash = '#{id}'").first
+				res = db.fetch("SELECT #{csel} FROM #{@name} WHERE hash = '#{id}'").first
 				res == nil ? (raise Basie::NoHashError.new("id not found")) : res
 			else
 				res = db.fetch("SELECT #{csel} FROM #{@name} WHERE id = '#{id}'").first

@@ -162,11 +162,9 @@ class Basie
 	#this mostly exists for testing purposes.
 	def cleanup
 		#do things in reverse.
-		connect do
-			@tables.keys.reverse_each do |table|
-				#first just drop the table.
-				db.drop_table?(table)
-				#then drop the views.
+		connect do |db|
+			@tables.values.reverse_each do |table|
+				table.cleanup(db)
 			end
 		end
 	end

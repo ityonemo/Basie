@@ -21,9 +21,9 @@ class Basie::Table
 	attr_reader :foreignkeys
 	attr_reader :basie
 
-	def columns
+	def columns(all = false)
 		#cast out any columns which are a "primary key".  These will be subbed for the hash.
-		if @settings[:use_hash]
+		if @settings[:use_hash] && !all
 			@columns.reject{|k,h| h.type == :primary_key}
 		else
 			@columns
@@ -48,8 +48,10 @@ class Basie::Table
 		@settings = params
 		#initialize a blank columns hash
 		@columns = {}
-		#initialize a foreign keys array
+		#initialize a foreign keys hash
 		@foreignkeys = {}
+		#initialize a reference views array.
+		@referenceviews = []
 
 		#then realize the input
 		analyze init_txt
@@ -68,6 +70,9 @@ class Basie::Table
     			init_cmd = "db.create_table?(:#{name}) do\n#{init_txt}\nend"	#generate the command
     			eval(init_cmd)													#execute it.
 			end
+
+			#next, create foreign table reference views
+			@foreignkeys.each_key {|k| create_reference_view(k, db)}
 		end
 	end
 
@@ -119,6 +124,33 @@ class Basie::Table
 	end
 	private :parse_column
 
+	#creates a reference view for each foreign key column.
+	def create_reference_view(column, db)
+    	#assign the actual foreign table
+    	fname = @foreignkeys[column]
+    	ftable = @basie.tables[fname]
+
+    	#check to see if the foreign table uses hash.
+
+    	if ftable.settings[:use_hash]
+    		#generate the view name.  The view name is table + column + foreignname + "_lookup"
+    		vname = "#{@name}_#{column}_lookup"
+
+    		#generate the select statement
+    		select = "SELECT id, hash FROM #{fname}"
+
+    		db.create_or_replace_view(vname, select)
+
+    		@referenceviews.push vname
+    	end
+	end
+	private :create_reference_view
+
+	#forwarded cleanup responsibilities from basie.  Mostly just for testing purposes.
+	def cleanup(db)
+		db.drop_table?(@name)
+		@referenceviews.each{|view| db.drop_view(view, :if_exists => true)}
+	end
 
 	##########################################################################
 	## HASH-EY FUNCTIONS
