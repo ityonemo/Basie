@@ -51,7 +51,7 @@ class Basie::Table
 		end.join(", ")
 	end
 
-	def select_modifier_strings
+	def select_modifier_string
 		#joins and selects and as that substitutes in the table.
 		join = @foreignkeys.keys.reject{|k| !@basie.tables[@foreignkeys[k]].settings[:use_hash]}
 			.map do |k|
@@ -60,16 +60,13 @@ class Basie::Table
 			end.join(' ')
 		join
 	end
-	private :select_modifier_strings
+	private :select_modifier_string
 
 	def entire_table
 		#returns the entire table as a ruby object.
 		@basie.connect do |db|
 			#TODO:  Do a permissions check here.
-
-			join = select_modifier_strings
-			select = "SELECT #{csel} FROM #{@name} #{join}"
-			process(db.fetch(select).all)
+			process(db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string}").all)
 		end
 	end
 
@@ -83,28 +80,32 @@ class Basie::Table
 				unless (is_hash?(id) && @settings[:use_hash])
 					raise(Basie::HashError, "bad input")
 				end
-				res = db.fetch("SELECT #{csel} FROM #{@name} WHERE hash = '#{id}'").first
+				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.hash = '#{id}'").first
 				res == nil ? (raise Basie::NoHashError.new("id not found")) : res
 			else
-				res = db.fetch("SELECT #{csel} FROM #{@name} WHERE id = '#{id}'").first
+				if (@settings[:use_hash])
+					raise(Basie::HashError, "bad input")
+				end
+				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.id = '#{id}'").first
 				res == nil ? (raise Basie::NoIdError.new("hash not found")) : res
 			end
+			process res
 		end
 	end
 
-	def data_by_search(search)
+#	def data_by_search(search)
 		#returns table data by default search key.
-		@basie.connect do |db|
+#		@basie.connect do |db|
 			#generate the search column text
-			searchcol = ""
-			db.fetch("SELECT #{csel} from #{@name} WHERE #{searchcol} = '#{search}'").first
-		end
-	end
+#			searchcol = ""
+#			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{searchcol} = '#{search}'").first)
+#		end
+#	end
 
 	def data_by_query(column, query)
 		#returns table data by general column query
 		@basie.connect do |db|
-			db.fetch("SELECT #{csel} from #{@name} WHERE #{column} = '#{query}'").first
+			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}'").first)
 		end
 	end
 
@@ -133,14 +134,17 @@ class Basie::Table
 		@basie.connect do |db|
 			case identifier.to_i
 			when 0 #should be a hash
-
-				unless is_hash?(identifier)
+				unless is_hash?(identifier) && @settings[:use_hash]
 					raise(Basie::HashError, "bad input")
 				end
 
 				res = db[@name].where(:hash => identifier).update(data)
 				res == 0 ? raise(Basie::NoHashError, "hash doesn't exist") : res
 			else  #should be an id number.
+				if (@settings[:use_hash])
+					raise(Basie::HashError, "bad input")
+				end
+
 				res = db[@name].where(:id => identifier).update(data)
 				res == 0 ? raise(Basie::NoIdError, "id doesn't exist") : res
 			end

@@ -16,7 +16,7 @@ class ForeignHashTest < Test::Unit::TestCase
 
   def setup
   	$BS = Basie.new :name => "testdb"
-    Basie.activate :HTML
+    Basie.activate [:HTML, :CSV, :JSON]
     create [:righttest_hash, :lefttest_hash]
   end
 
@@ -24,14 +24,33 @@ class ForeignHashTest < Test::Unit::TestCase
     $BS.cleanup
   end
 
+  def test_foreign_hash_json
+    get ('/json/lefttest_hash')
+    assert last_response.ok?
+    assert_equal File.new("./results/foreigntest-hash.json").read, last_response.body
+
+    get ('/json/lefttest_hash/1')
+    assert last_response.ok?
+    assert_equal File.new("./results/foreigntest-hash-part.json").read, last_response.body
+  end
+
+  def test_foreign_hash_csv
+    get ('/csv/lefttest_hash')
+    assert last_response.ok?
+    assert_equal File.new("./results/foreigntest-hash.csv").read, last_response.body
+
+    get ('/csv/lefttest_hash/1')
+    assert last_response.ok?
+    assert_equal File.new("./results/foreigntest-hash-part.csv").read, last_response.body
+  end
+
   def test_foreign_hash_html
   	get ('/html/lefttest_hash')
   	assert last_response.ok?
   	assert_equal File.new("./results/foreigntest-hash.ml").read, last_response.body
 
-    #get ('/html/lefttest_hash/1')
-    #assert last_response.ok?
-    #puts last_response.body
-    #assert_equal File.new("./results/foreigntest-part.ml").read, last_response.body
+    get ('/html/lefttest_hash/1')
+    assert last_response.ok?
+    assert_equal File.new("./results/foreigntest-hash-part.ml").read, last_response.body
   end
 end
