@@ -63,9 +63,8 @@ def data_hashtest(db)
   ids.each{|i| $BS.tables[:hashtest].brandhash(i)}
 end
 
-def data_complextest(db)
-  #nothing.  This test just tests html input system
-end
+#nothing.  This test just tests html input system
+def data_complextest(db); end
 
 def data_lefttest(db)
   db[:lefttest].insert(:leftcontent => "left 1", :right => 1)
@@ -95,3 +94,20 @@ def data_lefttest_hash(db)
   db[:lefttest_hash].insert(:leftcontent => "left 1", :right => 1)
   db[:lefttest_hash].insert(:leftcontent => "left 2", :right => 2)
 end
+
+def data_righttest_label(db)
+  ids = []
+
+  ids.push db[:righttest_label].insert(:rightcontent => "nina")
+  ids.push db[:righttest_label].insert(:rightcontent => "nana")
+
+  ids.each{|i| $BS.tables[:righttest_label].brandhash(i)}
+end
+
+def data_lefttest_label(db)
+  db[:lefttest_label].insert(:leftcontent => "left 1", :right => 1)
+  db[:lefttest_label].insert(:leftcontent => "left 2", :right => 2)
+end
+
+#nothing.  This just tests a bad label entry.
+def data_righttest_label_bad(db); end

@@ -65,6 +65,12 @@ class POSTTest < Test::Unit::TestCase
     assert_equal 404, last_response.status
   end
 
+  def test_attempt_to_write_nonexistent_hash
+    post "/db/hashtest/NotAHashFool", params = {:content => "nonexistent"}
+
+    assert_equal 404, last_response.status
+  end
+
   def test_attempt_to_overwrite_id
     #this directive contains a sneaky attempt to write in an id.
     post "/db/simpletest/1", params = {:id=>4, :test => "substituted"}

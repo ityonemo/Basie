@@ -75,32 +75,45 @@ class Basie::Table
 		#returns the table data by row id (primary or hash key)
 
 		@basie.connect do |db|
-			case id.to_i		#use the to_i function to assess if it's a hash or not.			
-			when 0
-				unless (is_hash?(id) && @settings[:use_hash])
-					raise(Basie::HashError, "bad input")
+
+			if (is_hash?(id))
+				unless settings[:use_hash]
+					raise(Basie::HashUnavailableError, "bad input")
 				end
 				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.hash = '#{id}'").first
 				res == nil ? (raise Basie::NoHashError.new("id not found")) : res
-			else
+			elsif (Fixnum === id) || (id.to_i.to_s == id)
 				if (@settings[:use_hash])
-					raise(Basie::HashError, "bad input")
+					raise(Basie::IdForbiddenError, "bad input")
 				end
 				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.id = '#{id}'").first
 				res == nil ? (raise Basie::NoIdError.new("hash not found")) : res
+			else
+				raise(Basie::HashError, "malformed hash")
 			end
 			process res
 		end
 	end
 
-#	def data_by_search(search)
-		#returns table data by default search key.
-#		@basie.connect do |db|
+	def data_by_label(search)
+		unless @settings[:use_label]
+			raise Basie::LabelUnavailableError, "label not available for this table"
+		end
+		#returns table data by default label key.
+		@basie.connect do |db|
 			#generate the search column text
-#			searchcol = ""
-#			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{searchcol} = '#{search}'").first)
-#		end
-#	end
+
+			cstmt = ""
+
+			if @settings[:use_label].length == 1
+				cstmt = @settings[:use_label][0]
+			else
+				cstmt = "CONCAT(" + @settings[:use_label].join(",") + ")"
+			end
+
+			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}'").first)
+		end
+	end
 
 	def data_by_query(column, query)
 		#returns table data by general column query
@@ -128,25 +141,25 @@ class Basie::Table
 		end
 	end
 
-	def update_data(identifier, data)
+	def update_data(id, data)
 		#a basic update should be a single item.
 		#please remove the :id key when updating via id, and the :hash and :id keys when updating via identifier.
 		@basie.connect do |db|
-			case identifier.to_i
-			when 0 #should be a hash
-				unless is_hash?(identifier) && @settings[:use_hash]
-					raise(Basie::HashError, "bad input")
+			if (is_hash?(id))
+				unless settings[:use_hash]
+					raise(Basie::HashUnavailableError, "bad input")
 				end
-
-				res = db[@name].where(:hash => identifier).update(data)
+				res = db[@name].where(:hash => id).update(data)
 				res == 0 ? raise(Basie::NoHashError, "hash doesn't exist") : res
-			else  #should be an id number.
+			elsif (Fixnum === id) || (id.to_i.to_s == id)
 				if (@settings[:use_hash])
-					raise(Basie::HashError, "bad input")
+					raise(Basie::IdForbiddenError, "bad input")
 				end
 
-				res = db[@name].where(:id => identifier).update(data)
+				res = db[@name].where(:id => id).update(data)
 				res == 0 ? raise(Basie::NoIdError, "id doesn't exist") : res
+			else
+				raise(Basie::HashError, "malformed hash")
 			end
 		end
 	end

@@ -24,6 +24,11 @@ class ForeignTest < Test::Unit::TestCase
     $BS.cleanup
   end
 
+  def test_foreign_bad
+    #tests to make sure we can't make a foreign table that doesn't exist without raising an exception.
+    assert_raise (Basie::NoTableError) {create :lefttest_bad}
+  end
+
   def test_foreign_basic	
   	get('/json/lefttest')
   	assert last_response.ok?

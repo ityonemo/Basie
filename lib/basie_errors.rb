@@ -13,12 +13,24 @@ class Basie::NoTableError < Basie::DefinitionError; end
 #for when you have a wierd type definition
 class Basie::BadTypeError < Basie::DefinitionError; end
 
+#for when you don't have a label that you're looking for
+class Basie::NoLabelError < Basie::DefinitionError; end
+
 
 ###############################################
 ## OTHER OOPSES
 
 #creates an error when an object that should be a hash is malformed.
 class Basie::HashError < ArgumentError; end
+
+#creates an error for when hashes are not available for this table.
+class Basie::HashUnavailableError < ArgumentError; end
+
+#creates an error for when hashes are not available for this table.
+class Basie::LabelUnavailableError < ArgumentError; end
+
+#creates an error for when id-based access is forbidden in favor of hashes.
+class Basie::IdForbiddenError < ArgumentError; end
 
 
 ###############################################

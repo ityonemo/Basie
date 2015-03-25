@@ -1,0 +1,4 @@
+#basie test foreignkeys left table
+primary_key	:id
+String		:leftcontent
+foreign_key :right, :nosuchtable

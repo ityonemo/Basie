@@ -10,7 +10,6 @@ require_relative 'table_accessors'
 
 #forward the existence of the Basie class.
 class Basie; end
-
 #forward the existence of the Basie Column class.
 class Basie::Column; end
 
@@ -103,13 +102,26 @@ class Basie::Table
 				parse_column sline
 			end
 		end
+
+		#things to do when the label parsing has finished.
+		if @settings[:use_label]
+			#check to make sure
+			@settings[:use_label].each do |label|
+				if !@columns.has_key?(label.to_sym)
+					raise Basie::NoLabelError, "no column corresponding to the desired label"
+				end
+			end
+		end
 	end
 	private :analyze
 
 	def parse_setting(line)
 		#look for the "use_hash" setting
-		if line[0..7] == "use_hash"
-			@settings[:use_hash] = true
+		@settings[:use_hash] ||= (line[0..7] == "use_hash")
+
+		#look for the "label" setting.
+		if /label\s/ =~ line[0..5]
+			@settings[:use_label] = line.split[1..-1]
 		end
 	end
 	private :parse_setting
@@ -155,7 +167,11 @@ class Basie::Table
 	##########################################################################
 	## HASH-EY FUNCTIONS
 	def is_hash?(string)
-		(string.length == @basie.settings[:hashlen]) && ( /([\w\-\_]*)/.match(string)[1].length == @basie.settings[:hashlen])
+		if String === string
+			(string.length == @basie.settings[:hashlen]) && ( /([\w\-\_]*)/.match(string)[1].length == @basie.settings[:hashlen])
+		else
+			false
+		end
 	end
 
 	def hashgen(id)

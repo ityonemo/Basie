@@ -27,6 +27,13 @@ class HashTest < Test::Unit::TestCase
   end
 
   #########################################################################
+  ## TESTING STATUS DETECTION
+  def test_hash_detection
+    assert !$BS.tables[:simpletest].settings[:use_hash]
+    assert $BS.tables[:hashtest].settings[:use_hash]
+  end
+
+  #########################################################################
   ## TESTING TABLE ACCESSORS
 
   def test_access_data_by_hash
@@ -58,6 +65,11 @@ class HashTest < Test::Unit::TestCase
     assert_raise (Basie::HashError){$BS.tables[:hashtest].data_by_id('not_a_real_hash')}
     #test well-formed but nonexistent input for hash data access
     assert_raise (Basie::NoHashError){$BS.tables[:hashtest].data_by_id('HashNotThere')}
+    #test for the case when there is no hash column.
+    assert_raise (Basie::HashUnavailableError){$BS.tables[:simpletest].data_by_id('HashNotThere')}
+    #test for the case when hashes should suppress ids.
+    assert_raise (Basie::IdForbiddenError){$BS.tables[:hashtest].data_by_id(1)}
+    assert_raise (Basie::IdForbiddenError){$BS.tables[:hashtest].data_by_id('1')}
 
     #test malformed input for hash data update
     assert_raise (Basie::HashError){$BS.tables[:hashtest].update_data('not_a_real_hash', {:content => "not to be changed"})}
@@ -108,16 +120,19 @@ class HashTest < Test::Unit::TestCase
     get ('/json/hashtest/G-qeUNuU2Ow8')
     assert last_response.ok?
     assert_equal File.new("./results/hashtest-part.json").read, last_response.body
-  end
-
-  ###########################################################################
-  ## TESTING DATA CREATION WITH HASHES
-
-  
+  end  
 
   ###########################################################################
   ## TESTING AGAINST ADVERSARIAL CONDITIONS
 
-  def test_bad_hash_requests_json
+  def test_bad_hash_requests
+    get('/json/hashtest/NotAHashFool')
+    assert_equal 404, last_response.status
+  end
+
+  def test_id_request_with_hash
+    get('/json/hashtest/1')
+    #let's make sure this is a 400 error
+    assert_equal 400, last_response.status
   end
 end
