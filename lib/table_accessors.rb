@@ -111,14 +111,14 @@ class Basie::Table
 				cstmt = "CONCAT(" + @settings[:use_label].join(",") + ")"
 			end
 
-			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}'").first)
+			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}'").all)
 		end
 	end
 
 	def data_by_query(column, query)
 		#returns table data by general column query
 		@basie.connect do |db|
-			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}'").first)
+			process(db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}'").all)
 		end
 	end
 
