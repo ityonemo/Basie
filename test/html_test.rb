@@ -82,6 +82,15 @@ class HTMLTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpletest-part.ml").read, last_response.body
   end
 
+  def test_multiple_query_route
+    #should retrieve more than one line.
+    get('/html/simpletest/test/two')
+
+    #assertions about what the route we just triggered
+    assert last_response.ok?
+    assert_equal File.new("./results/simpletest-multiple-part.ml").read, last_response.body
+  end
+
   def test_input_form
     get('/htmlform/simpletest')
 

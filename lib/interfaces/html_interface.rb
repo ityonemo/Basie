@@ -262,28 +262,18 @@ class Basie::HTMLInterface < Basie::Interface
 			end
 		end
 
-		route_check(:search) do
-=begin
-		#register a path for searching
-		if (@@params[:routes] == :all || @@params[:routes].include?(:search))
-			#TODO:  IMPLEMENT DEFAULT SEARCHABLE COLUMNS
-
-			app.get (tableroot + "/:query") do |query|
-				#get the data
-				res = table.data_by_id(query)
-				haml Basie::HTMLInterface.to_dl(res, table)
-			end
-		end
-=end
-		end
-
 		#register a path for querying
 		route_check(:query) do
 			app.get(tableroot + "/:column/:query") do |column, query|
 				#get the data
 				begin
 					res = table.data_by_query(column, query)
-					haml Basie::HTMLInterface.to_dl(res, table)
+					case res
+					when Array
+						if res.length == 0; return 404; end
+						haml Basie::HTMLInterface.to_table(res, table)
+					when Hash; haml Basie::HTMLInterface.to_dl(res, table)
+					end
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError

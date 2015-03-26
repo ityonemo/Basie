@@ -54,4 +54,13 @@ class CSVTest < Test::Unit::TestCase
     assert last_response.ok?
     assert_equal "\"id\",\"test\"\n\"1\",\"one\"\n", last_response.body
   end
+
+  def test_multiple_query_route
+    #get one line where more than one line of data should appear
+    get('/csv/simpletest/test/two')
+
+    #assertions about what the route we just triggered
+    assert last_response.ok?
+    assert_equal "\"id\",\"test\"\n\"2\",\"two\"\n\"3\",\"two\"\n", last_response.body
+  end
 end

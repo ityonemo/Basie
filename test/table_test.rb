@@ -75,7 +75,7 @@ class TableTest < Test::Unit::TestCase
   end
 
   #########################################################################################33
-  ## TESTING ACCESSORS
+  ## DATA ACCESS (ACCESSORS)
 
   def test_entire_table
     $BS = Basie.new :name => "testdb"
@@ -89,17 +89,20 @@ class TableTest < Test::Unit::TestCase
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_id(1))
   end
 
-  def test_data_by_search
-#    create :simpletest
-#    assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_id(1))
-#   destroy :simpletest
-  end
-
   def test_data_by_query
     $BS = Basie.new :name => "testdb"
     create :simpletest
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_query(:test, "one"))
   end
+
+  def test_data_by_dual_query
+    $BS = Basie.new :name => "testdb"
+    create :simpletest
+    assert_equal([{:id=>2, :test=>"two"}, {:id=>3, :test=>"two"}], $BS.tables[:simpletest].data_by_query(:test, "two"))
+  end
+
+  ######################################################################################
+  ## DATA INSERTION
 
   def test_insert_data_hash
     $BS = Basie.new :name => "testdb"

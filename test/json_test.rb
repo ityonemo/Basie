@@ -60,6 +60,20 @@ class JSONTest < Test::Unit::TestCase
     #associative arrays are, instead, assigned to strings.
     assert_equal '{"id":1,"test":"one"}', last_response.body
   end
+
+  def test_multiple_query_route
+    #get one line where we've preselected the data
+
+    #get just one line
+    get('/json/simpletest/test/two')
+
+    #assertions about what the route we just triggered
+    assert last_response.ok?
+    #check the resulting data after a JSON parse.
+    #remember, JSON.parse does NOT assign keys of Javascript hashes to symbols
+    #associative arrays are, instead, assigned to strings.
+    assert_equal '[{"id":2,"test":"two"},{"id":3,"test":"two"}]', last_response.body
+  end
 end
 
 class JSONRouteTests < Test::Unit::TestCase
