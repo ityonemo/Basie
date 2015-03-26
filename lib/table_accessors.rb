@@ -9,10 +9,22 @@ class Basie; end
 
 class Basie::Table 
 
-	def process(r)
+	def process(r, preserve = false)
 		case r 
 		when Array
-			r.map{|v| process(v)}
+			case r.length
+			when 0
+				nil
+			when 1
+				if preserve
+					[process(r[0])]
+				else
+					#unpack the array
+					process(r[0])
+				end
+			else
+				r.map{|v| process(v)}
+			end
 		when Hash
 			#then swap out the subscripted key for the normal key.
 			temp = {}
@@ -25,6 +37,8 @@ class Basie::Table
 				end
 			end
 			temp
+		else
+			nil
 		end
 	end
 
@@ -66,7 +80,7 @@ class Basie::Table
 		#returns the entire table as a ruby object.
 		@basie.connect do |db|
 			#TODO:  Do a permissions check here.
-			process(db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string}").all)
+			process(db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string}").all, true)
 		end
 	end
 
