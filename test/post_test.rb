@@ -28,13 +28,13 @@ class POSTTest < Test::Unit::TestCase
   #test the basic route
   def test_post_insert_data
 
-    post "/db/simpletest", params = {:test => "three"}
+    post "/db/simpletest", params = {:test => "four"}
 
     #make sure this responded ok
     assert last_response.success?
 
     #make sure that the table looks as it should.
-    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"three"}], $BS.tables[:simpletest].entire_table
+    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"},{:id=>4, :test=>"four"}], $BS.tables[:simpletest].entire_table
   end
 
   def test_post_update_data
@@ -42,7 +42,7 @@ class POSTTest < Test::Unit::TestCase
     #make sure this responded ok
     assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
-    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
   end
 
   def test_post_update_data_with_hash
@@ -60,7 +60,7 @@ class POSTTest < Test::Unit::TestCase
   ## SOME ADVERSARIAL TESTS
 
   def test_attempt_to_write_nonexistent_id
-    post "/db/simpletest/3", params = {:test => "nonexistent"}
+    post "/db/simpletest/4", params = {:test => "nonexistent"}
 
     assert_equal 404, last_response.status
   end
@@ -77,7 +77,7 @@ class POSTTest < Test::Unit::TestCase
     #make sure this responded ok
     assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
-    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
   end
 
   def test_attempt_to_overwrite_hash

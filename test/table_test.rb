@@ -80,7 +80,7 @@ class TableTest < Test::Unit::TestCase
   def test_entire_table
     $BS = Basie.new :name => "testdb"
     create :simpletest
-    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
   end
 
   def test_data_by_id
@@ -121,7 +121,7 @@ class TableTest < Test::Unit::TestCase
     $BS = Basie.new :name => "testdb"
     create :simpletest
     $BS.tables[:simpletest].update_data(1, {:test => "substituted"})
-    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
   end
 
   #############################################################################3

@@ -11,4 +11,8 @@
     <td class='id'>2</td>
     <td class='test'>two</td>
   </tr>
+  <tr>
+    <td class='id'>3</td>
+    <td class='test'>two</td>
+  </tr>
 </table>

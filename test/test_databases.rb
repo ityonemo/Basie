@@ -36,6 +36,7 @@ end
 def data_simpletest(db)
   db[:simpletest].insert(:test => "one")
   db[:simpletest].insert(:test => "two")
+  db[:simpletest].insert(:test => "two")
 end
 
 def data_urltest (db)

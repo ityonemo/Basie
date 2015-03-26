@@ -44,10 +44,7 @@ class Basie::Table
 
 	def csel
 		#returns a select string that corresponds to an 'adjusted' select statement
-		#two things must be done.  
 		#1.		primary_key must be eliminated if use_hash is activated.
-		#2.		foreign_key must be substituted if the foreign use_hash is activated.
-
 		#primary key stuff
 
 		if @settings[:use_hash]
