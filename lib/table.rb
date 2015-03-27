@@ -158,6 +158,27 @@ class Basie::Table
 	end
 	private :create_reference_view
 
+	##################################################################3
+	## DATA HELPER FUNCTIONS
+
+	#helper function, which makes input hashes or arrays look nice.
+	def reformat_input(input)
+		#checks a list of rows, then massages the input to be compatible with the basie DB input.
+		case input
+		when Array
+			input.map {|data| reformat_input(data)}
+		when Hash
+			temp = {}	#we can't do a map on the hash data type
+			input.each do |column, data|
+				csym = column.to_sym
+				if @columns.has_key?(csym)
+					temp[csym] = data
+				end
+			end
+			temp
+		end
+	end
+
 	#forwarded cleanup responsibilities from basie.  Mostly just for testing purposes.
 	def cleanup(db)
 		db.drop_table?(@name)

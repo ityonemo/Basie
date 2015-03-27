@@ -4,6 +4,7 @@ require "sinatra"
 require "test/unit"
 require "rack/test"
 require "json"
+require "fileutils"
 
 require_relative '../lib/basie'
 require_relative 'test_databases'
@@ -62,5 +63,28 @@ class CSVTest < Test::Unit::TestCase
     #assertions about what the route we just triggered
     assert last_response.ok?
     assert_equal "\"id\",\"test\"\n\"2\",\"two\"\n\"3\",\"two\"\n", last_response.body
+  end
+
+  def test_csv_upload_route
+    #create a clone table.
+    $BS.create :simpletest_clone, :path => 'tables/simpletest.basie'
+
+    #get the entire csv file.
+    get '/csv/simpletest'
+    assert last_response.ok?
+    #create a temporary file and throw it contents of the response into this file.
+    firstoutput = last_response.body
+    File.write('temp.csv', last_response.body)
+
+    #fill out the clone table using the outputted CSV file.
+    post '/csv/simpletest_clone', 'simpletest_clone' => Rack::Test::UploadedFile.new('temp.csv', 'text/csv')
+    assert last_response.ok?
+
+    #now check to see that the contents are the same.
+    get '/csv/simpletest_clone'
+    assert last_response.ok?
+    assert_equal firstoutput, last_response.body
+
+    FileUtils.rm('temp.csv')
   end
 end

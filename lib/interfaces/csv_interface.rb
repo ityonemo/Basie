@@ -1,3 +1,4 @@
+require 'csv'
 require_relative "base_interface"
 
 #A JSON intrepreter for basie.
@@ -31,7 +32,36 @@ class Basie::CSVInterface < Basie::Interface
 		end
 	end
 
-	#JSON does nothing special for the table and column readings.  So we may skip directly to:
+	#converts a csv into an array of hashes.
+	def self.array_from_csv(file)
+		rownumber = 1
+		columnnames = []
+		output = []
+
+		CSV.foreach(file) do |row|
+
+			if (rownumber == 1)
+				#assign this to the column names array.
+				columnnames = row
+			else
+				#check for an empty row.
+				if row.compact == []
+					next
+				end
+
+				rowhash = {}
+
+				(0..columnnames.length - 1).each do |idx|
+					rowhash[columnnames[idx]] = row[idx]
+				end
+				output << rowhash
+			end
+
+			rownumber += 1
+		end
+
+		output
+	end
 
 	def setup_paths(table)
 		#table should be a symbol to the name of the table.
@@ -79,6 +109,38 @@ class Basie::CSVInterface < Basie::Interface
 				rescue Basie::NoEntryError
 					404
 				end
+			end
+		end
+
+		route_check(:postform) do
+			app.get('/csvform') do
+				haml "%form(action='/csv/#{table.name}' enctype='multipart/form-data' method='POST')\n\t%input(type='file' name='#{table.name}')\n\t%input(type='submit')"
+			end
+		end
+
+		route_check(:post) do
+			app.post (tableroot) do
+
+				#save the parameter that has file info.
+				dparam = params[table.name]
+				#check to make sure we have a well-formed input here
+				unless dparam
+					#TODO:  Double check that this error code is correct.
+					return 400
+				end
+				unless dparam[:type] == "text/csv"
+					#TODO:  Set the error correctly here to reflect HTML type rejection.
+					return 400
+				end
+
+				#parse the tempfile into a basie-compatible object
+				rowlist = Basie::CSVInterface.array_from_csv(dparam[:tempfile])
+
+				a = table.reformat_input(rowlist)
+
+				table.insert_data(a)
+
+				200
 			end
 		end
 	end
