@@ -16,6 +16,8 @@ class Basie::BadTypeError < Basie::DefinitionError; end
 #for when you don't have a label that you're looking for
 class Basie::NoLabelError < Basie::DefinitionError; end
 
+#for when you are trying to define multiple user tables
+class Basie::UserTableError < Basie::DefinitionError; end
 
 ###############################################
 ## OTHER OOPSES

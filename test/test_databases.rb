@@ -112,3 +112,8 @@ end
 
 #nothing.  This just tests a bad label entry.
 def data_righttest_label_bad(db); end
+
+def data_usertest(db)
+  db[:usertest].insert(:login => "user 1", :password => SCrypt::Password.create("user 1 pass").to_s)
+  db[:usertest].insert(:login => "user 2", :password => SCrypt::Password.create("user 2 pass").to_s)
+end

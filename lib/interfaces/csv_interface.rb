@@ -1,7 +1,7 @@
 require 'csv'
 require_relative "base_interface"
 
-#A JSON intrepreter for basie.
+#A CSV intrepreter for basie.
 class Basie::CSVInterface < Basie::Interface
 
 	def initialize(params={})

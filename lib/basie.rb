@@ -13,6 +13,8 @@ require_relative "interfaces/json_interface"
 require_relative "interfaces/html_interface"
 require_relative "interfaces/csv_interface"
 require_relative "interfaces/post_interface"
+require_relative "interfaces/user_interface"
+
 
 #basie is an environment that handles access to a database.
 class Basie
