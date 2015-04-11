@@ -1,0 +1,5 @@
+#generic basie file
+#user_table
+primary_key	:id
+String		:login
+String		:password		#suppress

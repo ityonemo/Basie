@@ -114,6 +114,6 @@ end
 def data_righttest_label_bad(db); end
 
 def data_usertest(db)
-  db[:usertest].insert(:login => "user 1", :password => SCrypt::Password.create("user 1 pass").to_s)
-  db[:usertest].insert(:login => "user 2", :password => SCrypt::Password.create("user 2 pass").to_s)
+  db[:usertest].insert(:login => "user 1", :password => Basie::UserInterface.encrypt("user 1 pass", "user 1").to_s)
+  db[:usertest].insert(:login => "user 2", :password => Basie::UserInterface.encrypt("user 2 pass", "user 2").to_s)
 end

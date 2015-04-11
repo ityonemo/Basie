@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.homepage = 'https://github.com/ityonemo/Basie'
 
   # Include everything in the lib folder
-  s.files = Dir['lib/**/*']
+  s.test_files = Dir.glob("test/*.rb")
   s.license = 'MIT'
 
   # Supress the warning about no rubyforge project

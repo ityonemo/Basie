@@ -34,7 +34,6 @@ class Basie::LabelUnavailableError < ArgumentError; end
 #creates an error for when id-based access is forbidden in favor of hashes.
 class Basie::IdForbiddenError < ArgumentError; end
 
-
 ###############################################
 ## ACCESS FAILS
 
