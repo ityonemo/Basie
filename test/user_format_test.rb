@@ -41,6 +41,48 @@ class UserFormatTest < Test::Unit::TestCase
   	assert_equal File.new("./results/simpleuser-form.ml").read, last_response.body
   end
 
+  #test overriding form id.
+
+  def test_form_id_override
+    set_up :table => :usertest
+
+    get ('/loginform?form_id=testform')
+
+    assert last_response.ok?
+    assert_equal File.new("./results/simpleuser-form-id-override.ml").read, last_response.body
+  end
+
+  #test overriding the login name.
+
+  def test_loginname_override
+    set_up :table => :usertest
+
+    get ('/loginform?lname=testname')
+
+    assert last_response.ok?
+    assert_equal File.new("./results/simpleuser-form-loginname-override.ml").read, last_response.body
+  end
+
+  def test_logintitle_override
+    set_up :table => :usertest
+
+    get ('/loginform?ltitle=testname')
+
+    assert last_response.ok?
+    assert_equal File.new("./results/simpleuser-form-logintitle-override.ml").read, last_response.body
+  end
+
+  #test redirect overrides
+
+  def test_redirect_override
+    set_up :table => :usertest
+
+    get ('/loginform?redirect=/test')
+
+    assert last_response.ok?
+    assert_equal File.new("./results/simpleuser-form-redirect.ml").read, last_response.body
+  end
+ 
   def test_default_nojs_login
   	set_up :table => :usertest
 

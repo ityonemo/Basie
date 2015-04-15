@@ -1,6 +1,6 @@
 <form action='/login' id='login_form' method='POST'>
   <div id='form_login'>
-    <label for='login_field'>Login</label>
+    <label for='login_field'>testname</label>
     <input id='login_field' name='login' type='text'>
   </div>
   <div id='form_password'>

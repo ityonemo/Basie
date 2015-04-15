@@ -48,6 +48,10 @@ class Basie::UserInterface < Basie::Interface
 				raise(Basie::UserTableError, "can't have more than one user tables")
 			end
 
+			#assign a login column, if that's defined as a part of the user_table directive
+			@logincolumn = table_comment[10..-1].strip
+			@logincolumn = (@logincolumn == "" ? :login : @logincolumn.to_sym)
+
 			#store the table as our class variable.
 			@@host_table = table
 		end
@@ -57,38 +61,58 @@ class Basie::UserInterface < Basie::Interface
 		#only set up paths once, and only relative to the appropriate host table.
 		if (table == @@host_table)
 
+			#establish this variable in the closure
+			logincolumn = @logincolumn
+
 			#produce a login form.
 			#TODO:  Make HTML/CSS optional here.
 			route_check(:loginform) do
 				app.get("/loginform") do
+					#loginforms has several options that are overrideable by passing parameters to the GET route
 
-					#PARAMETER HANDLING
+					#form_id:   overrides the form id (default: "login_form")
+					#lname:     overrides use of 'logincolumn' (or 'login' if unspecified) as the title of the login name.
+					#ltitle:    overrides lname.capitalize for the title of the form.
+					#
+					#redirect:  instructs the resulting POST statement to redirect to a particular path afterwards.
+					#    - "", <nil>: (default) creates a javascript statement that correctly fills in the path from the browser
+					#    - "none", "false": passes a nil redirect path.
+					#    - <any other string>: a path that is the passed string. 
+
+					#OVERRIDE THE FORM'S ID
+					form_id = params["form_id"] || "login_form"
+					#OVERRIDE THE LOGINCOLUMN NAME
+					login_name = params["lname"] || logincolumn.to_s
+					#OVERRIDE THE LOGINCOLUMN TITLE
+					login_title = params["ltitle"] || login_name.capitalize
 
 					#HANDLE A REDIRECT OPTION.
 					#the redirect path to start off with.
 					rd_string = ""
 					#javascript to handle the redirect string.
-					rdj_string = ""
-					case params[:redirect]
+					rd_js = ""
+					case params["redirect"]
 					when "", nil
-						rdj_string = ":javascript\n\tdocument.getElementById('redirect').value = window.location"
+						rd_js = ":javascript\n\tdocument.getElementById('redirect').value = window.location"
 					when "none", "false"
 						#do nothing.
 					else
 						rd_string = params[:redirect]
 					end
 
-					o = "%form(action='/login' method='POST')\n"
-					o += "\t#login_name\n"
-					o += "\t\t%label Login\n"
-					o += "\t\t%input#login(type='text' name='login')\n"
-					o += "\t#login_password\n"
-					o += "\t\t%label Password\n"
-					o += "\t\t%input#password(type='password' name='password')\n"
-					o += "\t#login_submit\n"
+					o = "%form##{form_id}(action='/login' method='POST')\n"
+					o += "\t#form_#{login_name}\n"
+					o += "\t\t%label(for='login_field')"
+					o += "\t\t\t#{login_title}\n"
+					o += "\t\t%input#login_field(type='text' name='#{login_name}')\n"
+					o += "\t#form_password\n"
+					o += "\t\t%label(for='password_field')"
+					o += "\t\t\tPassword\n"
+					o += "\t\t%input#password_field(type='password' name='password')\n"
+					o += "\t#form_submit\n"
 					o += "\t\t%input(type='submit' value='login')\n"
 					o += "\t\t%input#redirect(type='hidden' name='redirect' value='#{rd_string}')\n"
-					o += rdj_string
+					o += rd_js
 
 					haml o
 				end
@@ -97,15 +121,21 @@ class Basie::UserInterface < Basie::Interface
 			#produce a way to log in.  should use HTML POST technique, for security reasons.
 			route_check(:login) do
 				app.post("/login") do
+
 					#TODO:
 					#check for an adversarial null login.
 
 					#first retrieve the user name from the user table.
-					q = table.data_by_query(:login, params[:login])
+					q = table.data_by_query(logincolumn, params[:login])
+
+					unless q
+						403
+					end
 
 					#load up the passhash from the table into SCrypt and check it against the supplied password.
-					if Basie::UserInterface.check(q[:password], params[:password], params[:login])
-						#set the login cookie.
+					if Basie::UserInterface.check(q[:passhash], params[:password], params[:login])
+						#set the login cookie
+
 						session[:login] = params[:login]
 
 						#look to see if we have a redirect element.
@@ -126,7 +156,11 @@ class Basie::UserInterface < Basie::Interface
 			route_check(:logout) do
 				app.get("/logout") do
 					session[:login] = nil
-					200
+					if params[:redirect]
+						redirect params[:redirect]
+					else
+						200
+					end
 				end
 			end
 

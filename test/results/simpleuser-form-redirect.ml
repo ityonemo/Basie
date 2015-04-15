@@ -9,9 +9,6 @@
   </div>
   <div id='form_submit'>
     <input type='submit' value='login'>
-    <input id='redirect' name='redirect' type='hidden' value=''>
+    <input id='redirect' name='redirect' type='hidden' value='/test'>
   </div>
 </form>
-<script>
-  document.getElementById('redirect').value = window.location
-</script>

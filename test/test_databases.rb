@@ -114,6 +114,11 @@ end
 def data_righttest_label_bad(db); end
 
 def data_usertest(db)
-  db[:usertest].insert(:login => "user 1", :password => Basie::UserInterface.encrypt("user 1 pass", "user 1").to_s)
-  db[:usertest].insert(:login => "user 2", :password => Basie::UserInterface.encrypt("user 2 pass", "user 2").to_s)
+  db[:usertest].insert(:login => "user 1", :passhash => Basie::UserInterface.encrypt("user 1 pass", "user 1").to_s)
+  db[:usertest].insert(:login => "user 2", :passhash => Basie::UserInterface.encrypt("user 2 pass", "user 2").to_s)
+end
+
+def data_usertest_email(db)
+  db[:usertest].insert(:login => "user1@gmail.com", :passhash => Basie::UserInterface.encrypt("user1@gmail.com", "user 1").to_s)
+  db[:usertest].insert(:login => "user2@gmail.com", :passhash => Basie::UserInterface.encrypt("user2@gmail.com", "user 2").to_s)
 end

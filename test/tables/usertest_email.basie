@@ -1,0 +1,5 @@
+#basie file for a table that is a user-table (in this case use email)
+#user_table email
+primary_key	:id
+String		:email			#email
+String		:passhash		#suppress

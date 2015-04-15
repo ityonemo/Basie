@@ -1,5 +1,5 @@
-#generic basie file
+#basie file for a table that is a user-table
 #user_table
 primary_key	:id
 String		:login
-String		:password		#suppress
+String		:passhash		#suppress

@@ -1,7 +1,7 @@
 <form action='/login' id='login_form' method='POST'>
-  <div id='form_login'>
-    <label for='login_field'>Login</label>
-    <input id='login_field' name='login' type='text'>
+  <div id='form_testname'>
+    <label for='login_field'>Testname</label>
+    <input id='login_field' name='testname' type='text'>
   </div>
   <div id='form_password'>
     <label for='password_field'>Password</label>

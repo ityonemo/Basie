@@ -18,7 +18,6 @@ class UserTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate [:JSON, :User]
-    create [:usertest]
   end
 
   def teardown
@@ -27,6 +26,7 @@ class UserTest < Test::Unit::TestCase
   end
 
   def test_user_basic
+    create :usertest
   	#check to make sure that it starts with a clean slate.
   	get "/login"
   	assert last_response.ok?
@@ -52,6 +52,7 @@ class UserTest < Test::Unit::TestCase
   end
 
   def test_user_badlogin
+    create :usertest
   	#check to make sure that it starts with a clean slate.
   	get "/login"
   	assert last_response.ok?

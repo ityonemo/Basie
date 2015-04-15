@@ -1,4 +1,4 @@
-<form action='/login' id='login_form' method='POST'>
+<form action='/login' id='testform' method='POST'>
   <div id='form_login'>
     <label for='login_field'>Login</label>
     <input id='login_field' name='login' type='text'>

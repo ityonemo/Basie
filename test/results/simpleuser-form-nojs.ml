@@ -1,13 +1,13 @@
-<form action='/login' method='POST'>
-  <div id='login_name'>
-    <label>Login</label>
-    <input id='login' name='login' type='text'>
+<form action='/login' id='login_form' method='POST'>
+  <div id='form_login'>
+    <label for='login_field'>Login</label>
+    <input id='login_field' name='login' type='text'>
   </div>
-  <div id='login_password'>
-    <label>Password</label>
-    <input id='password' name='password' type='password'>
+  <div id='form_password'>
+    <label for='password_field'>Password</label>
+    <input id='password_field' name='password' type='password'>
   </div>
-  <div id='login_submit'>
+  <div id='form_submit'>
     <input type='submit' value='login'>
     <input id='redirect' name='redirect' type='hidden' value=''>
   </div>
