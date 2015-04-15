@@ -54,6 +54,19 @@ class UserTest < Test::Unit::TestCase
 
   def test_user_badlogin
     create :usertest
+    #check to make sure that it starts with a clean slate.
+    get "/login"
+    assert last_response.ok?
+    assert_equal "", last_response.body
+
+    #attempt to log in.
+    post "/login", params = {:login => "usar 1", :password => "user 1 post"}
+    #check we should have had a 403 error.
+    assert_equal 403, last_response.status
+  end
+
+  def test_user_badpassword
+    create :usertest
   	#check to make sure that it starts with a clean slate.
   	get "/login"
   	assert last_response.ok?
@@ -63,11 +76,6 @@ class UserTest < Test::Unit::TestCase
   	post "/login", params = {:login => "user 1", :password => "user 1 past"}
   	#check we should have had a 403 error.
   	assert_equal 403, last_response.status
-
-  	#check to see if we are not logged in
-  	get "/login"
-  	assert last_response.ok?
-  	assert_equal "", last_response.body
   end
 
   def test_user_altcolumnname

@@ -124,15 +124,11 @@ class Basie::UserInterface < Basie::Interface
 					#TODO:
 					#check for an adversarial null login.
 
-					begin
-						#first retrieve the user name from the user table.
-						q = table.data_by_query(Basie::UserInterface.logincolumn, params[Basie::UserInterface.logincolumn.to_s])
-					rescue => c
-						puts c.inspect
-					end
+					#first retrieve the user name from the user table.
+					q = table.data_by_query(Basie::UserInterface.logincolumn, params[Basie::UserInterface.logincolumn.to_s])
 
 					unless q
-						403
+						return 403
 					end
 
 					#load up the passhash from the table into SCrypt and check it against the supplied password.
