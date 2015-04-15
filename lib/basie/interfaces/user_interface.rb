@@ -73,8 +73,7 @@ class Basie::UserInterface < Basie::Interface
 					#loginforms has several options that are overrideable by passing parameters to the GET route
 
 					#form_id:   overrides the form id (default: "login_form")
-					#lname:     overrides use of 'logincolumn' (or 'login' if unspecified) as the title of the login name.
-					#ltitle:    overrides lname.capitalize for the title of the form.
+					#title:    overrides lname.capitalize for the title of the form.
 					#
 					#redirect:  instructs the resulting POST statement to redirect to a particular path afterwards.
 					#    - "", <nil>: (default) creates a javascript statement that correctly fills in the path from the browser
@@ -83,10 +82,9 @@ class Basie::UserInterface < Basie::Interface
 
 					#OVERRIDE THE FORM'S ID
 					form_id = params["form_id"] || "login_form"
-					#OVERRIDE THE LOGINCOLUMN NAME
-					login_name = params["lname"] || Basie::UserInterface.logincolumn.to_s
-					#OVERRIDE THE LOGINCOLUMN TITLE
-					login_title = params["ltitle"] || login_name.capitalize
+					#SET THE NAME AND TITLE
+					login_name = Basie::UserInterface.logincolumn.to_s
+					login_title = params["title"] || login_name.capitalize
 
 					#HANDLE A REDIRECT OPTION.
 					#the redirect path to start off with.

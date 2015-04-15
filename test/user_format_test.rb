@@ -53,21 +53,12 @@ class UserFormatTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpleuser-form-id-override.ml").read, last_response.body
   end
 
-  #test overriding the login name.
-
-  def test_loginname_override
-    set_up :table => :usertest
-
-    get ('/loginform?lname=testname')
-
-    assert last_response.ok?
-    assert_equal File.new("./results/simpleuser-form-loginname-override.ml").read, last_response.body
-  end
+  #test overriding the login title.
 
   def test_logintitle_override
     set_up :table => :usertest
 
-    get ('/loginform?ltitle=testname')
+    get ('/loginform?title=testname')
 
     assert last_response.ok?
     assert_equal File.new("./results/simpleuser-form-logintitle-override.ml").read, last_response.body
