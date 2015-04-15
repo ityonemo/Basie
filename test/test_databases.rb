@@ -119,6 +119,6 @@ def data_usertest(db)
 end
 
 def data_usertest_email(db)
-  db[:usertest].insert(:login => "user1@gmail.com", :passhash => Basie::UserInterface.encrypt("user1@gmail.com", "user 1").to_s)
-  db[:usertest].insert(:login => "user2@gmail.com", :passhash => Basie::UserInterface.encrypt("user2@gmail.com", "user 2").to_s)
+  db[:usertest_email].insert(:email => "user1@gmail.com", :passhash => Basie::UserInterface.encrypt("user 1 pass", "user1@gmail.com").to_s)
+  db[:usertest_email].insert(:email => "user2@gmail.com", :passhash => Basie::UserInterface.encrypt("user 2 pass", "user2@gmail.com").to_s)
 end

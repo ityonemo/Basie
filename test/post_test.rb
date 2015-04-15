@@ -23,6 +23,7 @@ class POSTTest < Test::Unit::TestCase
   def teardown
     $BS.cleanup
     Basie.purge_interfaces
+    app.reset!
   end
 
   #test the basic route

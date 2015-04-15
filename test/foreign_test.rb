@@ -22,6 +22,7 @@ class ForeignTest < Test::Unit::TestCase
 
   def teardown
     $BS.cleanup
+    app.reset!
   end
 
   def test_foreign_bad

@@ -23,6 +23,7 @@ class UserTest < Test::Unit::TestCase
   def teardown
     $BS.cleanup
     Basie.purge_interfaces
+    app.reset!
   end
 
   def test_user_basic
@@ -67,5 +68,33 @@ class UserTest < Test::Unit::TestCase
   	get "/login"
   	assert last_response.ok?
   	assert_equal "", last_response.body
+  end
+
+  def test_user_altcolumnname
+    create :usertest_email
+
+    #check to make sure we don't start out logged in as someone
+    get "/login"
+    assert last_response.ok?
+    assert_equal "", last_response.body
+
+    #attempt to log in
+    post "/login", params = {:email => "user1@gmail.com", :password => "user 1 pass"}
+    #check we should have had a 403 error.
+    assert last_response.ok?
+
+    #check to see if our login has worked.
+    get "/login"
+    assert last_response.ok?
+    assert_equal "user1@gmail.com", last_response.body
+
+    #check to see if we can log out
+    get "/logout"
+    assert last_response.ok?
+
+    #check to see if we have logged out.
+    get "/login"
+    assert last_response.ok?
+    assert_equal "", last_response.body
   end
 end

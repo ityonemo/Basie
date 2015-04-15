@@ -24,6 +24,7 @@ class HTMLTest < Test::Unit::TestCase
   def teardown
     $BS.cleanup
     Basie.purge_interfaces
+    app.reset!
   end
 
   def test_column_integer_default_hash

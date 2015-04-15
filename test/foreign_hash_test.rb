@@ -22,6 +22,7 @@ class ForeignHashTest < Test::Unit::TestCase
 
   def teardown
     $BS.cleanup
+    app.reset!
   end
 
   def test_foreign_hash_json

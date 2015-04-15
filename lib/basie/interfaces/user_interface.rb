@@ -38,6 +38,10 @@ class Basie::UserInterface < Basie::Interface
 		SCrypt::Password.create(hashstring(plaintext, salt))
 	end
 
+	def self.logincolumn
+		@@logincolumn
+	end
+
 	#######################################################################################3
 	## class functions
 
@@ -49,8 +53,9 @@ class Basie::UserInterface < Basie::Interface
 			end
 
 			#assign a login column, if that's defined as a part of the user_table directive
-			@logincolumn = table_comment[10..-1].strip
-			@logincolumn = (@logincolumn == "" ? :login : @logincolumn.to_sym)
+			logincolumn = table_comment[10..-1].strip
+
+			@@logincolumn = (logincolumn == "" ? :login : logincolumn.to_sym)
 
 			#store the table as our class variable.
 			@@host_table = table
@@ -59,11 +64,8 @@ class Basie::UserInterface < Basie::Interface
 
 	def setup_paths(table)
 		#only set up paths once, and only relative to the appropriate host table.
+
 		if (table == @@host_table)
-
-			#establish this variable in the closure
-			logincolumn = @logincolumn
-
 			#produce a login form.
 			#TODO:  Make HTML/CSS optional here.
 			route_check(:loginform) do
@@ -82,7 +84,7 @@ class Basie::UserInterface < Basie::Interface
 					#OVERRIDE THE FORM'S ID
 					form_id = params["form_id"] || "login_form"
 					#OVERRIDE THE LOGINCOLUMN NAME
-					login_name = params["lname"] || logincolumn.to_s
+					login_name = params["lname"] || Basie::UserInterface.logincolumn.to_s
 					#OVERRIDE THE LOGINCOLUMN TITLE
 					login_title = params["ltitle"] || login_name.capitalize
 
@@ -97,7 +99,7 @@ class Basie::UserInterface < Basie::Interface
 					when "none", "false"
 						#do nothing.
 					else
-						rd_string = params[:redirect]
+						rd_string = params["redirect"]
 					end
 
 					o = "%form##{form_id}(action='/login' method='POST')\n"
@@ -121,27 +123,30 @@ class Basie::UserInterface < Basie::Interface
 			#produce a way to log in.  should use HTML POST technique, for security reasons.
 			route_check(:login) do
 				app.post("/login") do
-
 					#TODO:
 					#check for an adversarial null login.
 
-					#first retrieve the user name from the user table.
-					q = table.data_by_query(logincolumn, params[:login])
+					begin
+						#first retrieve the user name from the user table.
+						q = table.data_by_query(Basie::UserInterface.logincolumn, params[Basie::UserInterface.logincolumn.to_s])
+					rescue => c
+						puts c.inspect
+					end
 
 					unless q
 						403
 					end
 
 					#load up the passhash from the table into SCrypt and check it against the supplied password.
-					if Basie::UserInterface.check(q[:passhash], params[:password], params[:login])
+					if Basie::UserInterface.check(q[:passhash], params["password"], params[Basie::UserInterface.logincolumn.to_s])
 						#set the login cookie
 
-						session[:login] = params[:login]
+						session[:login] = params[Basie::UserInterface.logincolumn.to_s]
 
 						#look to see if we have a redirect element.
-						if params[:redirect]
+						if params["redirect"]
 							#then redirect
-							redirect params[:redirect]
+							redirect params["redirect"]
 						else
 							#or do nothing.
 							200
@@ -156,8 +161,8 @@ class Basie::UserInterface < Basie::Interface
 			route_check(:logout) do
 				app.get("/logout") do
 					session[:login] = nil
-					if params[:redirect]
-						redirect params[:redirect]
+					if params["redirect"]
+						redirect params["redirect"]
 					else
 						200
 					end
