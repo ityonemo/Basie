@@ -38,15 +38,24 @@ class SuppressTest < Test::Unit::TestCase
   end
 
   def test_suppress_entire_table_restore_id
-    assert_equal [{:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}], $BS.tables[:suppresstest].entire_table(:restore => [:id])
+    assert_equal [{:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}], $BS.tables[:suppresstest].entire_table(:restore => :id)
   end
 
   def test_suppress_entire_table_restore_tests
-    assert_equal [{:hash=>"zszwf8tWQsN3",
-                   :test=>"test 1", 
+    assert_equal [{:hash => "zszwf8tWQsN3",
+                   :test => "test 1", 
                    :test2 => "test 2",
                    :test3 => "test 3",
                    :test4 => "test 4"}], $BS.tables[:suppresstest].entire_table(:restore => [:test2, :test3, :test4])
+  end
+
+  def test_suppress_entire_table_restore_all
+    assert_equal [{:id => 1,
+                   :hash =>"zszwf8tWQsN3",
+                   :test =>"test 1", 
+                   :test2 => "test 2",
+                   :test3 => "test 3",
+                   :test4 => "test 4"}], $BS.tables[:suppresstest].entire_table(:restore => :all)
   end
 
   def test_suppress_single_data
@@ -54,7 +63,7 @@ class SuppressTest < Test::Unit::TestCase
   end
 
   def test_suppress_single_data_restore_id
-    assert_equal ({:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_id('zszwf8tWQsN3', :restore => [:id])
+    assert_equal ({:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_id('zszwf8tWQsN3', :restore => :id)
   end
 
   def test_suppress_single_data_restore_tests
@@ -65,12 +74,21 @@ class SuppressTest < Test::Unit::TestCase
                    :test4 => "test 4"}), $BS.tables[:suppresstest].data_by_id('zszwf8tWQsN3', :restore => [:test2, :test3, :test4])
   end
 
+  def test_suppress_single_data_restore_all
+    assert_equal ({:id => 1,
+                   :hash =>"zszwf8tWQsN3",
+                   :test =>"test 1", 
+                   :test2 => "test 2",
+                   :test3 => "test 3",
+                   :test4 => "test 4"}), $BS.tables[:suppresstest].data_by_id('zszwf8tWQsN3', :restore => :all)
+  end
+
   def test_suppress_query
     assert_equal ({:hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_query(:test, "test 1")
   end
 
   def test_suppress_query_restore_id
-    assert_equal ({:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_query(:test, "test 1", :restore => [:id])
+    assert_equal ({:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_query(:test, "test 1", :restore => :id)
   end
 
   def test_suppress_query_restore_tests
@@ -81,12 +99,21 @@ class SuppressTest < Test::Unit::TestCase
                    :test4 => "test 4"}), $BS.tables[:suppresstest].data_by_query(:test, "test 1", :restore => [:test2, :test3, :test4])
   end
 
+  def test_suppress_query_restore_all
+    assert_equal ({:id => 1,
+                   :hash =>"zszwf8tWQsN3",
+                   :test =>"test 1", 
+                   :test2 => "test 2",
+                   :test3 => "test 3",
+                   :test4 => "test 4"}), $BS.tables[:suppresstest].data_by_query(:test, "test 1", :restore => :all)
+  end
+
   def test_suppress_label
     assert_equal ({:hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_label("test 1")
   end
 
   def test_suppress_label_restore_id
-    assert_equal ({:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_label("test 1", :restore => [:id])
+    assert_equal ({:id => 1, :hash=>"zszwf8tWQsN3", :test=>"test 1"}), $BS.tables[:suppresstest].data_by_label("test 1", :restore => :id)
   end
 
   def test_suppress_label_restore_tests
@@ -95,5 +122,14 @@ class SuppressTest < Test::Unit::TestCase
                    :test2 => "test 2",
                    :test3 => "test 3",
                    :test4 => "test 4"}), $BS.tables[:suppresstest].data_by_label("test 1", :restore => [:test2, :test3, :test4])
+  end
+
+  def test_suppress_label_restore_all
+    assert_equal ({:id => 1,
+                   :hash =>"zszwf8tWQsN3",
+                   :test =>"test 1", 
+                   :test2 => "test 2",
+                   :test3 => "test 3",
+                   :test4 => "test 4"}), $BS.tables[:suppresstest].data_by_label("test 1", :restore => :all)
   end
 end
