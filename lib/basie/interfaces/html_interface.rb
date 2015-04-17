@@ -240,9 +240,10 @@ class Basie::HTMLInterface < Basie::Interface
 		#register a path to the table.
 		route_check(:table) do
 			app.get (tableroot) do
+
 				#get the data
 				res = table.entire_table
-
+				
 				haml Basie::HTMLInterface.to_table(res, table)
 			end
 		end
@@ -250,9 +251,11 @@ class Basie::HTMLInterface < Basie::Interface
 		route_check(:id) do
 			#register for id-based searching.
 			app.get (tableroot + "/:query") do |query|
+
 				#get the data
 				begin
 					res = table.data_by_id(query)
+
 					haml Basie::HTMLInterface.to_dl(res, table)
 				rescue ArgumentError
 					400
