@@ -1,5 +1,6 @@
 #generic basie file
 #use_hash
+#label test
 primary_key	:id
 String		:hash
 String		:test
