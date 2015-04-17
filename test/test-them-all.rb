@@ -10,6 +10,7 @@ require_relative 'column_test'
 
 #databasing sugar
 require_relative 'hash_test'
+require_relative 'suppress_test'
 require_relative 'foreign_test'
 require_relative 'foreign_hash_test'
 require_relative 'label_test'

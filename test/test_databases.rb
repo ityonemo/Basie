@@ -122,3 +122,9 @@ def data_usertest_email(db)
   db[:usertest_email].insert(:email => "user1@gmail.com", :passhash => Basie::UserInterface.encrypt("user 1 pass", "user1@gmail.com").to_s)
   db[:usertest_email].insert(:email => "user2@gmail.com", :passhash => Basie::UserInterface.encrypt("user 2 pass", "user2@gmail.com").to_s)
 end
+
+#nothing.
+def data_suppresstest(db)
+  db[:suppresstest].insert(:test => "test 1", :test2 => "test 2", :test3 => "test 3", :test4 => "test 4")
+  $BS.tables[:suppresstest].brandhash(1)
+end

@@ -14,7 +14,7 @@ class Basie::UserInterface < Basie::Interface
   		end
 
   		#use a universal salt for the entire application.
-  		@@univ_salt = params[:salt].to_s || "basie"
+  		@@univ_salt = (params[:salt] || "basie").to_s
 
 		super(params)
 	end
@@ -123,9 +123,9 @@ class Basie::UserInterface < Basie::Interface
 				app.post("/login") do
 					#TODO:
 					#check for an adversarial null login.
-
+					
 					#first retrieve the user name from the user table.
-					q = table.data_by_query(Basie::UserInterface.logincolumn, params[Basie::UserInterface.logincolumn.to_s])
+					q = table.data_by_query(Basie::UserInterface.logincolumn, params[Basie::UserInterface.logincolumn.to_s], :restore => [:passhash])
 
 					unless q
 						return 403

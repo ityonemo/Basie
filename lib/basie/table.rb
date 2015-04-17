@@ -19,27 +19,16 @@ class Basie::Table
 	attr_reader :settings
 	attr_reader :foreignkeys
 	attr_reader :basie
-
-	def columns(all = false)
-		#cast out any columns which are a "primary key".  These will be subbed for the hash.
-		if @settings[:use_hash] && !all
-			@columns.reject{|k,h| h.type == :primary_key}
-		else
-			@columns
-		end
-	end
+	attr_reader :suppresslist
+	attr_reader :columns
 
 	def initialize(name, init_txt, params = {})
 		#check to make sure our arguments are all right.
-		unless (Symbol === name) && (String === init_txt) && (Hash === params)
-			raise ArgumentError, "incorrect arguments for initializing a table"
-		end
+		raise ArgumentError, "incorrect arguments for initializing a table" unless (Symbol === name) && (String === init_txt) && (Hash === params)
 
 		#cache a link to the parent basie object
 		@basie = params[:basie]
-		unless (Basie === @basie)
-			raise ArgumentError, "failure to pass the parent Basie object"
-		end
+		raise ArgumentError, "failure to pass the parent Basie object" unless (Basie === @basie)
 
 		#store the name.
 		@name = name
@@ -51,6 +40,8 @@ class Basie::Table
 		@foreignkeys = {}
 		#initialize a reference views array.
 		@referenceviews = []
+		#create an array to hold the columns that we're going to suppress
+		@suppresslist = []
 
 		#then realize the input
 		analyze init_txt
@@ -83,10 +74,10 @@ class Basie::Table
 		init_txt.each_line do |line|
 			#save the line with beginning and ending whitespace removed.
 			sline = line.strip
+
 			#skip blank lines
-			if sline.length == 0
-				next
-			end
+			next if sline.length == 0
+
 			#check to see if we are strictly a comment line
 			if (sline[0] == "#")
 				#parse as if it is a settings
@@ -112,6 +103,9 @@ class Basie::Table
 				end
 			end
 		end
+
+		#and then suppress the hash column if applicable
+		@suppresslist.push(:id) if (@settings[:use_hash])
 	end
 	private :analyze
 
@@ -132,6 +126,7 @@ class Basie::Table
 
 		#check to make sure this wasn't a blank line with no content.
 		@columns[cl.name] = cl
+
 		#if this column is a foreign key column, then add it to the foreign key list.
 	end
 	private :parse_column
@@ -203,8 +198,6 @@ class Basie::Table
 	def brandhash(id)
 		#brands an item with a certain id with its appropriate id
 		#note basie should be connected when running this.
-		if @settings[:use_hash]
-			@basie.db[@name].where(:id => id).update(:hash => hashgen(id))
-		end
+		@basie.db[@name].where(:id => id).update(:hash => hashgen(id))  if @settings[:use_hash]
 	end
 end

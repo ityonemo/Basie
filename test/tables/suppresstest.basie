@@ -1,0 +1,8 @@
+#generic basie file
+#use_hash
+primary_key	:id
+String		:hash
+String		:test
+String		:test2		#suppress
+String		:test3		#suppress
+String		:test4		#suppress

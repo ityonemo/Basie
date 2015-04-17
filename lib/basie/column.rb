@@ -11,20 +11,17 @@ class Basie::Column
 	def initialize(columnline, table = nil)
 		#set our parent reference values
 		@table = table
-		if @table; @basie = @table.basie; end
+
+		@basie = @table.basie if @table;
 
 		#check to make sure our columnline is not blank
-		if columnline.strip.length == 0
-			raise Basie::DefinitionError, "Basie Column Definitions must not be blank"
-		end
+		raise Basie::DefinitionError, "Basie Column Definitions must not be blank" if columnline.strip.length == 0
 
 		#eliminate from consideration everything past the 
 		lineparts = columnline.strip.split("#")
 
 		#check to make sure we haven't put in an all-comment line.
-		if lineparts[0].length == 0
-			raise Basie::DefinitionError, "Basie Column Definitions must not be comments"
-		end
+		raise Basie::DefinitionError, "Basie Column Definitions must not be comments" if lineparts[0].length == 0
 
 		#create a couple of temporary pieces to really get down to the parsing.
 		dbtokens = lineparts[0].split.map{|s| s[/\w+/]}.compact
@@ -34,22 +31,23 @@ class Basie::Column
 		@name = dbtokens[1][/\w+/].to_sym
 
 		@params = {}
+
+		#check for universal directives in comments
+		@table.suppresslist.push @name if @table && (comments.include? "suppress")
+
 		set_params(comments)
 
 		#other consistency checks.
 		#first, primary key should have name id.
-		if (@type == :primary_key) && (@name != :id)
-			raise Basie::PrimaryKeyError, "Basie primary keys must be named \"id\""
-		end
+		raise Basie::PrimaryKeyError, "Basie primary keys must be named \"id\""  if (@type == :primary_key) && (@name != :id)
+
 		#second, foreign keys should exist.
 		if (@type == :foreign_key)
 			#retrieve the foreign key from the parsing of the line.
 			fname = dbtokens[2][/\w+/].to_sym
 
 			#do a consistency check here.
-			unless @basie.tables.has_key?(fname)
-				raise Basie::NoTableError, "Basie foreign key doesn't exist"
-			end
+			raise Basie::NoTableError, "Basie foreign key doesn't exist" unless @basie.tables.has_key?(fname)
 
 			#we're ok. so set the table's foreign key store.
 			@table.foreignkeys[@name] = fname
