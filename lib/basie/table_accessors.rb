@@ -10,7 +10,25 @@ class Basie; end
 class Basie::Table 
 
 	def process(r, params = {})
+		#make the suppress list
 		params[:suppresslist] ||= []
+
+		#adjust the suppress list based on any "restores"
+		_suppresslist = case params[:restore]
+		when nil
+			params[:suppresslist]
+		when :all
+			[]
+		when Symbol
+			#a single symbol, not ":all"
+			params[:suppresslist].reject{|s| s == params[:restore]}
+		when Array
+			#hopefully, an array of symbols (but it's not necessary, just other elements won't work)
+			params[:suppresslist].reject{|s| params[:restore].include? s}
+		else
+			raise ArgumentError, "suppresslist must be nil, :all, a symbol, or an array of symbols"
+		end
+
 		case r 
 		when Array
 			case r.length
@@ -31,7 +49,7 @@ class Basie::Table
 			temp = {}
 			r.each_key do |k|
 				#just skip it if we aren't supposed to have it.
-				next if params[:suppresslist].include? k
+				next if _suppresslist.include? k
 				#we might have to do a conversion if it's coming from a view.
 				ks = k.to_s
 				if ks[-1] == "_"
@@ -76,24 +94,13 @@ class Basie::Table
 		#you can pass a list of tags to restore, or, all of them.
 
 		#generate the suppression list by filtering out the restored tags (if applicable)
-		_suppresslist = case params[:restore]
-		when nil
-			@suppresslist
-		when :all
-			[]
-		when Symbol
-			#a single symbol, not ":all"
-			@suppresslist.reject{|s| s == params[:restore]}
-		when Array
-			#hopefully, an array of symbols
-			@suppresslist.reject{|s| params[:restore].include? s}
-		else
-			raise ArgumentError, "suppresslist must be nil, :all, a symbol, or an array of symbols"
-		end
 
 		@basie.connect do |db|
 			#TODO:  Do a permissions check here.
-			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string}").all, :preserve => true, :suppresslist => _suppresslist
+			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string}").all, 
+			  :preserve => true, 
+			  :suppresslist => @suppresslist,
+			  :restore => params[:restore]
 		end
 	end
 
@@ -101,21 +108,6 @@ class Basie::Table
 		res = nil
 		#returns the table data by row id (primary or hash key)
 
-		#generate the suppression list by filtering out the restored tags (if applicable)
-		_suppresslist = case params[:restore]
-		when nil
-			@suppresslist
-		when :all
-			[]
-		when Symbol
-			#a single symbol, not ":all"
-			@suppresslist.reject{|s| s == params[:restore]}
-		when Array
-			#hopefully, an array of symbols
-			@suppresslist.reject{|s| params[:restore].include? s}
-		else
-			raise ArgumentError, "suppresslist must be nil, :all, a symbol, or an array of symbols"
-		end
 		@basie.connect do |db|
 
 			if (is_hash?(id))
@@ -140,28 +132,14 @@ class Basie::Table
 			else
 				raise(Basie::HashError, "malformed hash")
 			end
-			process res, :suppresslist => _suppresslist
+			process res, 
+			  :suppresslist => @suppresslist, 
+			  :restore => params[:restore]
 		end
 	end
 
 	def data_by_label(search, params={})
 		raise Basie::LabelUnavailableError, "label not available for this table" unless @settings[:use_label]
-
-		#generate the suppression list by filtering out the restored tags (if applicable)
-		_suppresslist = case params[:restore]
-		when nil
-			@suppresslist
-		when :all
-			[]
-		when Symbol
-			#a single symbol, not ":all"
-			@suppresslist.reject{|s| s == params[:restore]}
-		when Array
-			#hopefully, an array of symbols
-			@suppresslist.reject{|s| params[:restore].include? s}
-		else
-			raise ArgumentError, "suppresslist must be nil, :all, a symbol, or an array of symbols"
-		end
 
 		#returns table data by default label key.
 		@basie.connect do |db|
@@ -175,31 +153,19 @@ class Basie::Table
 				cstmt = "CONCAT(" + @settings[:use_label].join(",") + ")"
 			end
 
-			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}'").all, :suppresslist => _suppresslist
+			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}'").all, 
+			  :suppresslist => @suppresslist,
+			  :restore => params[:restore]
 		end
 	end
 
 	def data_by_query(column, query, params={})
 		#returns table data by general column query
 
-		#generate the suppression list by filtering out the restored tags (if applicable)
-		_suppresslist = case params[:restore]
-		when nil
-			@suppresslist
-		when :all
-			[]
-		when Symbol
-			#a single symbol, not ":all"
-			@suppresslist.reject{|s| s == params[:restore]}
-		when Array
-			#hopefully, an array of symbols
-			@suppresslist.reject{|s| params[:restore].include? s}
-		else
-			raise ArgumentError, "suppresslist must be nil, :all, a symbol, or an array of symbols"
-		end
-		
 		@basie.connect do |db|
-			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}'").all, :suppresslist => _suppresslist
+			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}'").all, 
+			    :suppresslist => @suppresslist,
+			    :restore => params[:restore]
 		end
 	end
 
