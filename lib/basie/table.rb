@@ -65,8 +65,7 @@ class Basie::Table
 			end
 
 			#now set public read and write access filters for this table.
-			@public_access = {:read => Basie.get_public_read[@name],
-				:write => Basie.get_public_write[@name]}
+			@public_access = Basie.get_public_access[@name]
 
 			#next, create foreign table reference views
 			@foreignkeys.each_key {|k| create_reference_view(k, db)}

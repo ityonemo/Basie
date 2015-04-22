@@ -96,22 +96,28 @@ class Basie
 		session[:access] = @@access_generator.call(q)
 	end
 
+	def self.get_public_access()
+		raise SecurityError, "security system not set" if @@access_generator == nil
+		@@access_generator.call(:public)
+	end
+
 	def self.access_control?; return @@access_generator != nil; end
 
 	#an access generator is designed to do the following:
-	# when a user logs on to the system, the access generator produces a hash of
-	# two hashes, a read hash and a write hash.  The read hash is a lookup table
-	# specifying for each table name either "" for full access or a control string
-	# "WHEN <string>" which when appended to the MySQL string filters the
-	# output.
+	# when a user logs on to the system, the access generator produces a hash,
+	# keyed by table.  Each value itself is a hash containing read and write keys.
 
-	# The write hash is a lookup table specifying for each table name a
-	# lambda which takes a potential input and filters it to conform with
-	# specifications and prohibit malicious input.  The lambda may output nil,
+	# The read subvalue is a lookup table either "" for full access or a control
+	# string which when appended as "WHEN <string>" MySQL appropriately filters
+	# the output to prevent leaking sensitive material.  The hash may contain nil,
 	# signifying an access error.
 
-	# The {:read, :write} hash is then saved into the session[:access], table
-	# accessors will look this up and use them..
+	# The write subvalue is a lookup table specifying a lambda which takes a
+	# potential input and filters it prohibiting malicious input.  The lambda may
+	# output nil, signifying an access error.
+
+	# the hash of tables is stored in the sessions value for safekeeping, behind
+	# the rack secret cookie.
 
 	# the access generator should also implement returning a call with :public
 	# that which sets read/write permissions for the general public
@@ -212,11 +218,14 @@ class Basie
 	#this is mostly useful for testing purposes
 	def enable_full_access
 		self.set_access_generator lambda do |x|
-			h = {}; j = {}
-			@tables.keys.each{|k| h[k] = ""}						#null string SQL filter
-			@tables.keys.each{|k| j[k] = lambda{|l| l}}	#pass through lambda filter
-			#the lambda should return a read/write pair with everything.
-			{:read => h, :write => h}
+			#we're going to ignore the x value which is normally used to specify either
+			#:public, or the user information.  We don't care, we're going to enable
+			#full access for everyone.
+
+			#create a temporary hash h.
+			h = {}
+			@tables.keys.each{|k| h[k] = {read => "", write => lambda{|l| l}}}
+			h
 		end
 	end
 end

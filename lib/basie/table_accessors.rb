@@ -92,7 +92,7 @@ class Basie::Table
 	def select_access_string(connector = :WHERE)
 		raise SecurityError("no security set") unless Basie.access_control?
 		#returns the select part that deal with access.
-		access = (session[:login] ? session[:access] : @public_access)[:read][@name]
+		access = (session[:login] ? session[:access][@name] : @public_access)[:read]
 		#if we get nil, that means that access is denied.
 		raise SecurityError("access denied") unless access
 		#now we need to stitch the appropriate connector in here
@@ -107,7 +107,7 @@ class Basie::Table
 	def access_filter_input_hash(content)
 		raise SecurityError("no security set") unless Basie.access_control?
 		#find the filter, this should be a lambda.
-		accessfilter = (session[:login] ? session[:access] : @public_access)[:write][@name]
+		accessfilter = (session[:login] ? session[:access][@name] : @public_access)[:write]
 		#a nil result suggests that access is denied
 		raise SecurityError("access denied") unless acessfilter
 		#filter the content.
