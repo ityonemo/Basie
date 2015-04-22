@@ -22,6 +22,9 @@ class Basie::Table
 	attr_reader :suppresslist
 	attr_reader :columns
 
+	#convenience variables that store SQL specifiers to control access.
+	attr_reader :public_access
+
 	def initialize(name, init_txt, params = {})
 		#check to make sure our arguments are all right.
 		raise ArgumentError, "incorrect arguments for initializing a table" unless (Symbol === name) && (String === init_txt) && (Hash === params)
@@ -60,6 +63,10 @@ class Basie::Table
     			init_cmd = "db.create_table?(:#{name}) do\n#{init_txt}\nend"	#generate the command
     			eval(init_cmd)													#execute it.
 			end
+
+			#now set public read and write access filters for this table.
+			@public_access = {:read => Basie.get_public_read[@name],
+				:write => Basie.get_public_write[@name]}
 
 			#next, create foreign table reference views
 			@foreignkeys.each_key {|k| create_reference_view(k, db)}

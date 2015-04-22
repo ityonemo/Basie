@@ -28,7 +28,9 @@ class Basie::Interface
 		#otherwise silently fail.
 	end
 
-	#a quick little thing that lets us encapsulate if the user has specified we should use this route.
+	#encapsulates boilerplate for if the developer has specified
+	#we should use this route, in case the developer only wants to provide access
+	#to a limited number of data pathways.
 	def route_check(route)
 		if (@routes == :all) || (@routes.include?(route))
 			yield

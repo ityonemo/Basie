@@ -29,7 +29,7 @@ class Basie
 	attr_reader :db
 	attr_reader :tables
 
-	##########################################################################3
+	##############################################################################
 	## MANAGEMENT OF INTERFACES
 
 	#a list of interfaces that we're using.
@@ -64,7 +64,7 @@ class Basie
 
 			#instantiate the class
 			c.new params
-		when Class 
+		when Class
 			if what.superclass == Basie::Interface
 				what.new params
 			else
@@ -73,7 +73,7 @@ class Basie
 		when Array
 			#also allow us to do arrays.
 			what.each{|interface| self.activate(interface)}
-		when Hash 
+		when Hash
 			#or hashes, if we wish to add parameters.
 			what.each{|interface, parameters| self.activate(interface, parameters)}
 		else
@@ -81,7 +81,44 @@ class Basie
 		end
 	end
 
-	##########################################################################
+	##############################################################################
+	## ACCESS SCHEMES
+
+	@@access_generator = nil
+
+	def self.set_access_generator(g);
+		raise ArgumentError, "access generator must be a proc" unless Proc === g
+		@@access_generator = g;
+	end
+
+	def self.set_session_access(q)
+		#q should be the result of a database query
+		session[:access] = @@access_generator.call(q)
+	end
+
+	def self.access_control?; return @@access_generator != nil; end
+
+	#an access generator is designed to do the following:
+	# when a user logs on to the system, the access generator produces a hash of
+	# two hashes, a read hash and a write hash.  The read hash is a lookup table
+	# specifying for each table name either "" for full access or a control string
+	# "WHEN <string>" which when appended to the MySQL string filters the
+	# output.
+
+	# The write hash is a lookup table specifying for each table name a
+	# lambda which takes a potential input and filters it to conform with
+	# specifications and prohibit malicious input.  The lambda may output nil,
+	# signifying an access error.
+
+	# The {:read, :write} hash is then saved into the session[:access], table
+	# accessors will look this up and use them..
+
+	# the access generator should also implement returning a call with :public
+	# that which sets read/write permissions for the general public
+
+	# more detailed permissions structures will come in future versions.
+
+	##############################################################################
 	## MANAGEMENT OF TABLES
 
 	#creating a new basie object.
@@ -168,6 +205,18 @@ class Basie
 			@tables.values.reverse_each do |table|
 				table.cleanup(db)
 			end
+		end
+	end
+
+	#a directive that disables security and allows read/write access for all entities.
+	#this is mostly useful for testing purposes
+	def enable_full_access
+		self.set_access_generator lambda do |x|
+			h = {}; j = {}
+			@tables.keys.each{|k| h[k] = ""}						#null string SQL filter
+			@tables.keys.each{|k| j[k] = lambda{|l| l}}	#pass through lambda filter
+			#the lambda should return a read/write pair with everything.
+			{:read => h, :write => h}
 		end
 	end
 end

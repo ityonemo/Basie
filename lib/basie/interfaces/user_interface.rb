@@ -11,10 +11,10 @@ class Basie::UserInterface < Basie::Interface
 		#register the JSON mime type with the application.
 		app.configure do
   			app.mime_type :plain, 'text/plain'
-  		end
+  	end
 
-  		#use a universal salt for the entire application.
-  		@@univ_salt = (params[:salt] || "basie").to_s
+  	#use a universal salt for the entire application, if specified.
+  	@@univ_salt = (params[:salt] || "basie").to_s
 
 		super(params)
 	end
@@ -24,7 +24,8 @@ class Basie::UserInterface < Basie::Interface
 	## these are kept as class functions so that they can be easily used outside of a class object.
 
 	def self.hashstring(plaintext, salt)
-		#generates the salted password from the plaintext password, the universal salt, and the individual salt.
+		#generates the salted password from the plaintext password, the universal salt, and the
+		#individual salt.
 		saltedtext = @@univ_salt + salt.to_s + plaintext
 	end
 
@@ -78,7 +79,7 @@ class Basie::UserInterface < Basie::Interface
 					#redirect:  instructs the resulting POST statement to redirect to a particular path afterwards.
 					#    - "", <nil>: (default) creates a javascript statement that correctly fills in the path from the browser
 					#    - "none", "false": passes a nil redirect path.
-					#    - <any other string>: a path that is the passed string. 
+					#    - <any other string>: a path that is the passed string.
 
 					#OVERRIDE THE FORM'S ID
 					form_id = params["form_id"] || "login_form"
@@ -123,19 +124,24 @@ class Basie::UserInterface < Basie::Interface
 				app.post("/login") do
 					#TODO:
 					#check for an adversarial null login.
-					
+
 					#first retrieve the user name from the user table.
-					q = table.data_by_query(Basie::UserInterface.logincolumn, params[Basie::UserInterface.logincolumn.to_s], :restore => [:passhash])
+					q = table.data_by_query(Basie::UserInterface.logincolumn,
+					  params[Basie::UserInterface.logincolumn.to_s], :restore => [:passhash])
 
 					unless q
 						return 403
 					end
 
 					#load up the passhash from the table into SCrypt and check it against the supplied password.
-					if Basie::UserInterface.check(q[:passhash], params["password"], params[Basie::UserInterface.logincolumn.to_s])
+					if Basie::UserInterface.check(q[:passhash], params["password"],
+						params[Basie::UserInterface.logincolumn.to_s])
 						#set the login cookie
 
 						session[:login] = params[Basie::UserInterface.logincolumn.to_s]
+
+						#set our session access variables
+						Basie::set_session_access(q)
 
 						#look to see if we have a redirect element.
 						if params["redirect"]
@@ -175,4 +181,3 @@ class Basie::UserInterface < Basie::Interface
 		end
 	end
 end
-
