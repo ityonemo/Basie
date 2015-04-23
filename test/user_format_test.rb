@@ -23,6 +23,7 @@ class UserFormatTest < Test::Unit::TestCase
     $BS = Basie.new :name => "testdb"
     Basie.purge_interfaces #just in case it hasn't been done and there's carryover from a previous basie run.
     Basie.activate :User, params
+    $BS.enable_full_access
 
     create params[:table]
   end
@@ -74,7 +75,7 @@ class UserFormatTest < Test::Unit::TestCase
     assert last_response.ok?
     assert_equal File.new("./results/simpleuser-form-redirect.ml").read, last_response.body
   end
- 
+
   def test_default_nojs_login
   	set_up :table => :usertest
 

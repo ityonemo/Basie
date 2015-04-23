@@ -18,6 +18,8 @@ class HashTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate [:JSON, :HTML, :CSV]
+    $BS.enable_full_access
+
     create [:hashtest, :simpletest]
   end
 
@@ -121,7 +123,7 @@ class HashTest < Test::Unit::TestCase
     get ('/json/hashtest/G-qeUNuU2Ow8')
     assert last_response.ok?
     assert_equal File.new("./results/hashtest-part.json").read, last_response.body
-  end  
+  end
 
   ###########################################################################
   ## TESTING AGAINST ADVERSARIAL CONDITIONS

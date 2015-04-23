@@ -17,6 +17,8 @@ class ForeignHashTest < Test::Unit::TestCase
   def setup
   	$BS = Basie.new :name => "testdb"
     Basie.activate [:HTML, :CSV, :JSON]
+    $BS.enable_full_access
+
     create [:righttest_hash, :lefttest_hash]
   end
 

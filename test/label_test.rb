@@ -17,6 +17,8 @@ class LabelTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate [:JSON, :HTML, :CSV]
+    $BS.enable_full_access
+
     create [:righttest_label, :lefttest_label]
   end
 

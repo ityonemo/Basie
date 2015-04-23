@@ -17,6 +17,8 @@ class POSTTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate :POST
+    $BS.enable_full_access
+
     create [:simpletest, :hashtest]
   end
 

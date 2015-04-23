@@ -15,13 +15,14 @@ class HTMLFormatTest < Test::Unit::TestCase
     Sinatra::Application
   end
 
-  #####################################################################################333
+  ##############################################################################
   ##### PLAYING WITH CSS
 
   def set_up(params = {})
     $BS = Basie.new :name => "testdb"
     Basie.purge_interfaces
     Basie.activate :HTML, params
+    $BS.enable_full_access
 
     create :simpletest
   end
@@ -32,8 +33,8 @@ class HTMLFormatTest < Test::Unit::TestCase
     app.reset!
   end
 
-###################################################################
-## :table_id
+  ##############################################################################
+  ## :table_id
 
   def test_table_id_suppression
     set_up :table_id => false
@@ -59,8 +60,8 @@ class HTMLFormatTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpletest-sub-table-id.ml").read, last_response.body
   end
 
-###################################################################
-## :header_class
+  ##############################################################################
+  ## :header_class
 
   def test_header_suppression
     set_up :header_class => false
@@ -71,8 +72,8 @@ class HTMLFormatTest < Test::Unit::TestCase
   end
 
 
-###################################################################
-## :entry_id
+  ##############################################################################
+  ## :entry_id
 
   def test_entry_id_suppression
     set_up :entry_id => false
@@ -98,9 +99,8 @@ class HTMLFormatTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpletest-part-sub-entry-id.ml").read, last_response.body
   end
 
-
-###################################################################
-## :form_id
+  ##############################################################################
+  ## :form_id
 
   def test_form_id_suppression
     set_up :form_id => false
@@ -126,9 +126,8 @@ class HTMLFormatTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpletest-form-sub-form-id.ml").read, last_response.body
   end
 
-
-###################################################################
-## :column_id
+  ##############################################################################
+  ## :column_id
 
   def test_column_id_suppression
     set_up :column_id => false
@@ -154,8 +153,8 @@ class HTMLFormatTest < Test::Unit::TestCase
     assert_equal File.new("./results/simpletest-form-sub-column-id.ml").read, last_response.body
   end
 
-###################################################################
-## :column_class
+  ##############################################################################
+  ## :column_class
 
   def test_column_class_removal
     set_up :column_class => false
@@ -171,7 +170,7 @@ class HTMLFormatTest < Test::Unit::TestCase
     get('/htmlform/simpletest')
     assert last_response.ok?
     assert_equal File.new("./results/simpletest-form-no-column-class.ml").read, last_response.body
-  end  
+  end
 
   def test_column_class_proc
     set_up :column_class => Proc.new{|col| col == :id ? "substituted" : false}

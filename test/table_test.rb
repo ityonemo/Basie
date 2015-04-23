@@ -46,30 +46,40 @@ class TableTest < Test::Unit::TestCase
 
   def test_create_table_using_symbol
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     $BS.create :simpletest
     simpletest_tests($BS)
   end
 
   def test_create_table_alt_directory
     $BS = Basie.new :name => "testdb", :tabledir => "tables_alt"
+    $BS.enable_full_access
+
     $BS.create :simpletest
     simpletest_tests($BS)
   end
 
   def test_create_table_passing_path
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     $BS.create :simpletest, :path => File.join(Dir.pwd, "tables/simpletest.basie")
     simpletest_tests($BS)
   end
 
   def test_create_table_passing_file
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     $BS.create :simpletest, :file => File.new(File.join(Dir.pwd, "tables/simpletest.basie"))
     simpletest_tests($BS)
   end
 
   def test_create_table_passing_string
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     $BS.create :simpletest, :definition => File.new(File.join(Dir.pwd, "tables/simpletest.basie")).read
     simpletest_tests($BS)
   end
@@ -79,24 +89,32 @@ class TableTest < Test::Unit::TestCase
 
   def test_entire_table
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     create :simpletest
     assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
   end
 
   def test_data_by_id
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     create :simpletest
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_id(1))
   end
 
   def test_data_by_query
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     create :simpletest
     assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_query(:test, "one"))
   end
 
   def test_data_by_dual_query
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     create :simpletest
     assert_equal([{:id=>2, :test=>"two"}, {:id=>3, :test=>"two"}], $BS.tables[:simpletest].data_by_query(:test, "two"))
   end
@@ -106,6 +124,8 @@ class TableTest < Test::Unit::TestCase
 
   def test_insert_data_hash
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     $BS.connect{|db| db.drop_table? :simpletest}
     $BS.create :simpletest
     $BS.tables[:simpletest].insert_data(:test => "one")
@@ -114,6 +134,8 @@ class TableTest < Test::Unit::TestCase
 
   def test_insert_data_array
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     $BS.connect{|db| db.drop_table? :simpletest}
     $BS.create :simpletest
     $BS.tables[:simpletest].insert_data([{:test => "one"},{:test => "two"}])
@@ -122,6 +144,8 @@ class TableTest < Test::Unit::TestCase
 
   def test_update_data_by_id
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     create :simpletest
     $BS.tables[:simpletest].update_data(1, {:test => "substituted"})
     assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
@@ -132,12 +156,16 @@ class TableTest < Test::Unit::TestCase
 
   def test_retrieve_data_nonexistent_id
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     create :simpletest
     assert_raise (Basie::NoIdError){$BS.tables[:simpletest].data_by_id(4)}
   end
 
   def test_update_data_nonexistent_id
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     create :simpletest
     assert_raise (Basie::NoIdError){$BS.tables[:simpletest].update_data(4, {:test => "substituted"})}
   end

@@ -17,6 +17,8 @@ class UserTest < Test::Unit::TestCase
 
   def setup
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
+
     Basie.activate [:JSON, :User]
   end
 

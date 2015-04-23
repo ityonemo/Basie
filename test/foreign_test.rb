@@ -17,6 +17,8 @@ class ForeignTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate [:JSON, :HTML, :CSV]
+    $BS.enable_full_access
+
     create [:righttest, :lefttest_nolink, :lefttest]
   end
 
@@ -30,7 +32,7 @@ class ForeignTest < Test::Unit::TestCase
     assert_raise (Basie::NoTableError) {create :lefttest_bad}
   end
 
-  def test_foreign_basic	
+  def test_foreign_basic
   	get('/json/lefttest')
   	assert last_response.ok?
   	assert_equal File.new("./results/foreigntest.json").read, last_response.body
