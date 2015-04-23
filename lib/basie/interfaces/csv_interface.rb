@@ -78,7 +78,7 @@ class Basie::CSVInterface < Basie::Interface
 			app.get (tableroot) do
 				content_type :csv
 
-				res = table.entire_table
+				res = table.entire_table(:session => session)
 
 				Basie::CSVInterface.to_csv(res)
 			end
@@ -88,7 +88,7 @@ class Basie::CSVInterface < Basie::Interface
 			app.get (tableroot + '/:id') do |id|
 				begin
 					content_type :csv
-					res = table.data_by_id(id)
+					res = table.data_by_id(id, :session => session)
 					Basie::CSVInterface.to_csv(res)
 				rescue ArgumentError
 					400
@@ -102,7 +102,7 @@ class Basie::CSVInterface < Basie::Interface
 			app.get (tableroot + '/:column/:query') do |column, query|
 				begin
 					content_type :csv
-					res = table.data_by_query(column, query)
+					res = table.data_by_query(column, query, :session => session)
 					Basie::CSVInterface.to_csv(res)
 				rescue ArgumentError
 					400
@@ -138,7 +138,7 @@ class Basie::CSVInterface < Basie::Interface
 
 				a = table.reformat_input(rowlist)
 
-				table.insert_data(a)
+				table.insert_data(a, :session => session)
 
 				200
 			end

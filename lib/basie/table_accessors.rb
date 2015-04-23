@@ -89,14 +89,30 @@ class Basie::Table
 	end
 	private :select_modifier_string
 
-	def select_access_string(connector = :WHERE)
-		raise SecurityError("no security set") unless Basie.access_control?
+	def select_access_string(session, connector = :WHERE)
+		puts "1"
+
+		raise SecurityError("no security set") unless @basie.access_control?
+
+		puts "2"
 		#returns the select part that deal with access.
-		access = (session[:login] ? session[:access][@name] : @public_access)[:read]
+		begin
+			puts @public_access.inspect
+
+			access = (session[:login] ? session[:access][@name] : @public_access)[:read]
+		rescue => c
+			puts c.inspect
+		end
+
+		puts "3"
 		#if we get nil, that means that access is denied.
 		raise SecurityError("access denied") unless access
+
+		puts "4"
 		#now we need to stitch the appropriate connector in here
 		unless access == ""
+
+			puts "5"
 			#useful/valid connectors are WHERE or AND, note MySQL is not case sensitive
 			#so a lower-case one is just peachy keen.
 			access.prepend("#{connector} ")
@@ -104,12 +120,12 @@ class Basie::Table
 		access
 	end
 
-	def access_filter_input_hash(content)
-		raise SecurityError("no security set") unless Basie.access_control?
+	def access_filter_input_hash(session, content)
+		raise SecurityError("no security set") unless @basie.access_control?
 		#find the filter, this should be a lambda.
 		accessfilter = (session[:login] ? session[:access][@name] : @public_access)[:write]
 		#a nil result suggests that access is denied
-		raise SecurityError("access denied") unless acessfilter
+		raise SecurityError("access denied") unless accessfilter
 		#filter the content.
 		accessfilter.call(content)
 	end
@@ -119,10 +135,13 @@ class Basie::Table
 		#you can pass a list of tags to restore, or, all of them.
 
 		#generate the suppression list by filtering out the restored tags (if applicable)
+		puts "hi dad"
 
 		@basie.connect do |db|
-			#TODO:  Do a permissions check here.
-			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{select_access_string}").all,
+
+			puts "hi mom"
+
+			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{select_access_string(params[:session])}").all,
 			  :preserve => true,
 			  :suppresslist => @suppresslist,
 			  :restore => params[:restore]
@@ -140,7 +159,7 @@ class Basie::Table
 				raise(Basie::HashUnavailableError, "bad input") unless @settings[:use_hash]
 
 				#create the (admittedly complicated) query
-				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.hash = '#{id}' #{select_access_string(:AND)}").first
+				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.hash = '#{id}' #{select_access_string(params[:session],:AND)}").first
 
 				#a nil result means the hash didn't exist
 				res == nil ? (raise Basie::NoHashError.new("hash not found")) : res
@@ -150,7 +169,7 @@ class Basie::Table
 				raise(Basie::IdForbiddenError, "bad input")	if (@settings[:use_hash])
 
 				#create the query.
-				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.id = '#{id}' #{select_access_string(:AND)}").first
+				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.id = '#{id}' #{select_access_string(params[:session],:AND)}").first
 
 				#a nil result means the id wasn't found.
 				res == nil ? (raise Basie::NoIdError.new("id not found")) : res
@@ -178,7 +197,7 @@ class Basie::Table
 				cstmt = "CONCAT(" + @settings[:use_label].join(",") + ")"
 			end
 
-			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}', #{select_access_string(:AND)}").all,
+			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}' #{select_access_string(params[:session],:AND)}").all,
 			  :suppresslist => @suppresslist,
 			  :restore => params[:restore]
 		end
@@ -188,27 +207,27 @@ class Basie::Table
 		#returns table data by general column query
 
 		@basie.connect do |db|
-			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}', #{select_access_string(:AND)}").all,
+			prc = process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}' #{select_access_string(params[:session],:AND)}").all,
 			    :suppresslist => @suppresslist,
 			    :restore => params[:restore]
+			prc
 		end
 	end
 
-	def insert_data(data)
+	def insert_data(data, params = {})
 		#runs a basic insert.
 		@basie.connect do |db|
-
 			#data could be an array or a hash.
 			case (data)
 			when Array
 				#if it's an array, it's more than one data hashes.
 				data.each do |datum|
-					datum = access_filter_input_hash(datum)
+					datum = access_filter_input_hash(params[:session], datum)
 					id = db[@name].insert(datum)
 					brandhash(id)
 				end
 			when Hash
-				datum = access_filter_input_hash(datum)
+				datum = access_filter_input_hash(params[:session], datum)
 				id = db[@name].insert(data)
 				#brand the hash, since we have inserted new data
 				brandhash(id)
@@ -216,12 +235,12 @@ class Basie::Table
 		end
 	end
 
-	def update_data(id, data)
+	def update_data(id, data, params = {})
 		#a basic update should be a single item.
 		#please remove the :id key when updating via id, and the :hash and :id keys when updating via identifier.
 
 		#filter the input hash
-		datum = access_filter_input_hash(datum)
+		datum = access_filter_input_hash(params[:session], datum)
 
 		@basie.connect do |db|
 			if (is_hash?(id))

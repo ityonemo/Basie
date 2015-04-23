@@ -90,7 +90,7 @@ class Basie::HTMLInterface < Basie::Interface
 		hmfn = @@params[param_tag]
 
 		#introspective assignment of the prefix.
-		prefix = case param_tag.to_s.split("_")[1] 
+		prefix = case param_tag.to_s.split("_")[1]
 		when "id"
 			"#"
 		when "class"
@@ -120,18 +120,18 @@ class Basie::HTMLInterface < Basie::Interface
 		header = "%table" + tid
 
 		#check to see if our table is going to be blank.
-		if data.length == 0 
+		if data.length == 0
 			return header
 		end
 
 		hcs = @@params[:header_class] == false ? "" : ".header"
 
 		#add the header row which contains all of the common keys.
-		header += "\n\t%tr#{hcs}" 
+		header += "\n\t%tr#{hcs}"
 
 		#add the header rows.
 		header += data[0].keys.map{|k| "\n\t\t%th#{hml(k, :column_class)} #{k}"}.join
-		
+
 		#then add all of the data rows.
 		header + data.each.map {|h| "\n\t%tr" + h.keys.map {|k|"\n\t\t%td#{hml(k, :column_class)} #{hinsert(table,k,h[k],3)} #{h[k]}"}.join}.join
 	end
@@ -242,8 +242,8 @@ class Basie::HTMLInterface < Basie::Interface
 			app.get (tableroot) do
 
 				#get the data
-				res = table.entire_table
-				
+				res = table.entire_table(:session => session)
+
 				haml Basie::HTMLInterface.to_table(res, table)
 			end
 		end
@@ -254,7 +254,7 @@ class Basie::HTMLInterface < Basie::Interface
 
 				#get the data
 				begin
-					res = table.data_by_id(query)
+					res = table.data_by_id(query, :session => session)
 
 					haml Basie::HTMLInterface.to_dl(res, table)
 				rescue ArgumentError
@@ -270,11 +270,11 @@ class Basie::HTMLInterface < Basie::Interface
 			app.get(tableroot + "/:column/:query") do |column, query|
 				#get the data
 				begin
-					res = table.data_by_query(column, query)
+					res = table.data_by_query(column, query, :session => session)
 					case res
 					when Array
 						if res.length == 0; return 404; end
-						haml Basie::HTMLInterface.to_table(res, table)
+						haml Basie::HTMLInterface.to_table(res, tabl)
 					when Hash; haml Basie::HTMLInterface.to_dl(res, table)
 					end
 				rescue ArgumentError
@@ -294,10 +294,9 @@ class Basie::HTMLInterface < Basie::Interface
 			end
 
 			app.get (tableformroot + "/:query") do |query|
-				res = table.data_by_id(query)
+				res = table.data_by_id(query, :session => session)
 				haml Basie::HTMLInterface.to_if(table, res)
 			end
 		end
 	end
 end
-

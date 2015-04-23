@@ -15,9 +15,12 @@ require_relative "interfaces/csv_interface"
 require_relative "interfaces/post_interface"
 require_relative "interfaces/user_interface"
 
+#just put this here.
+enable :sessions
 
 #basie is an environment that handles access to a database.
 class Basie
+
 	#full access objects
 	attr_accessor :settings
 
@@ -84,28 +87,31 @@ class Basie
 	##############################################################################
 	## ACCESS SCHEMES
 
-	@@access_generator = nil
+	@access_generator = nil
 
-	def self.set_access_generator(g);
+	def set_access_generator(g);
 		raise ArgumentError, "access generator must be a proc" unless Proc === g
-		@@access_generator = g;
+		@access_generator = g;
 	end
 
-	def self.set_session_access(q)
+	def set_session_access(q, s)
 		#q should be the result of a database query
-		session[:access] = @@access_generator.call(q)
+		s[:access] = {}
+		@tables.each_key do |t|
+			s[:access][t] = @access_generator.call(q, t)
+		end
 	end
 
-	def self.get_public_access()
-		raise SecurityError, "security system not set" if @@access_generator == nil
-		@@access_generator.call(:public)
+	def get_public_access(table)
+		raise SecurityError, "security system not set" if @access_generator == nil
+		@access_generator.call(:public, table)
 	end
 
-	def self.access_control?; return @@access_generator != nil; end
+	def access_control?; return @access_generator != nil; end
 
-	#an access generator is designed to do the following:
-	# when a user logs on to the system, the access generator produces a hash,
-	# keyed by table.  Each value itself is a hash containing read and write keys.
+	#an access generator is passed (user_query, table) pair. user_query is the
+	# database result from a user query.  Alternatively, user_query might be
+	# :public.  Table is the symbol for a table in the system.
 
 	# The read subvalue is a lookup table either "" for full access or a control
 	# string which when appended as "WHEN <string>" MySQL appropriately filters
@@ -118,9 +124,6 @@ class Basie
 
 	# the hash of tables is stored in the sessions value for safekeeping, behind
 	# the rack secret cookie.
-
-	# the access generator should also implement returning a call with :public
-	# that which sets read/write permissions for the general public
 
 	# more detailed permissions structures will come in future versions.
 
@@ -203,6 +206,10 @@ class Basie
 		end
 	end
 
+	def set_public_access
+		@tables.each_value{|t| t.set_public_access}
+	end
+
 	#an internal procedure that disposes of all of Basie's tables and views in an orderly fashion.
 	#this mostly exists for testing purposes.
 	def cleanup
@@ -215,17 +222,14 @@ class Basie
 	end
 
 	#a directive that disables security and allows read/write access for all entities.
-	#this is mostly useful for testing purposes
+	#this is mostly useful for testing purposes.  But it also serves as an example
+	#of what a (very simplistic) access generator might look like.
 	def enable_full_access
-		self.set_access_generator lambda do |x|
+		set_access_generator(lambda do |x, t|
 			#we're going to ignore the x value which is normally used to specify either
 			#:public, or the user information.  We don't care, we're going to enable
 			#full access for everyone.
-
-			#create a temporary hash h.
-			h = {}
-			@tables.keys.each{|k| h[k] = {read => "", write => lambda{|l| l}}}
-			h
-		end
+ 			{:read => "", :write => (lambda {|l| l})}
+		end)
 	end
 end

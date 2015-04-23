@@ -19,6 +19,7 @@ class CSVTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate :CSV
+    $BS.enable_full_access
     create :simpletest
   end
 

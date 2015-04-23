@@ -1,8 +1,6 @@
 require 'scrypt'
 require_relative "base_interface"
 
-enable :sessions
-
 class Basie::UserInterface < Basie::Interface
 
 	def initialize(params={})

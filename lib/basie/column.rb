@@ -2,6 +2,7 @@
 #contains the Column class which handles column definitions.
 
 class Basie::Column
+
 	attr_reader :name		#column name
 	attr_reader :type		#column type
 	attr_reader :table		#column's parent table
@@ -17,7 +18,7 @@ class Basie::Column
 		#check to make sure our columnline is not blank
 		raise Basie::DefinitionError, "Basie Column Definitions must not be blank" if columnline.strip.length == 0
 
-		#eliminate from consideration everything past the 
+		#eliminate from consideration everything past the
 		lineparts = columnline.strip.split("#")
 
 		#check to make sure we haven't put in an all-comment line.
@@ -99,7 +100,7 @@ class Basie::Column
 			end
 		else
 			raise Basie::BadTypeError, "unidentified column type class: " + typetoken
-		end	
+		end
 	end
 	private :type_of
 

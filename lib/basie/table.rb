@@ -15,6 +15,7 @@ class Basie::Column; end
 
 #define the basie table class.
 class Basie::Table
+
 	attr_reader :name
 	attr_reader :settings
 	attr_reader :foreignkeys
@@ -48,6 +49,9 @@ class Basie::Table
 
 		#then realize the input
 		analyze init_txt
+		
+		#now set public read and write access filters for this table.
+		@public_access = @basie.get_public_access(@name)
 
 		#connect to the database, then create the database entries.
 		@basie.connect do |db|
@@ -63,9 +67,6 @@ class Basie::Table
     			init_cmd = "db.create_table?(:#{name}) do\n#{init_txt}\nend"	#generate the command
     			eval(init_cmd)													#execute it.
 			end
-
-			#now set public read and write access filters for this table.
-			@public_access = Basie.get_public_access[@name]
 
 			#next, create foreign table reference views
 			@foreignkeys.each_key {|k| create_reference_view(k, db)}
