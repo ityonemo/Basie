@@ -39,7 +39,8 @@ class Basie::JSONInterface < Basie::Interface
 		route_check(:table) do
 			app.get (tableroot) do
 				content_type :json
-				table.entire_table.to_json
+
+				table.entire_table(:session => session).to_json
 			end
 		end
 
@@ -47,7 +48,7 @@ class Basie::JSONInterface < Basie::Interface
 			app.get (tableroot + '/:id') do |id|
 				begin
 					content_type :json
-					table.data_by_id(id).to_json
+					table.data_by_id(id, :session => session).to_json
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError
@@ -64,7 +65,7 @@ class Basie::JSONInterface < Basie::Interface
 			app.get (tableroot + "/:column/:query") do |column, query|
 				begin
 					content_type :json
-					table.data_by_query(column, query).to_json
+					table.data_by_query(column, query, :session => session).to_json
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError

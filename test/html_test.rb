@@ -18,6 +18,7 @@ class HTMLTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate :HTML
+    $BS.enable_full_access
     create [:simpletest, :complextest, :urltest, :emailtest, :teltest]
   end
 
@@ -89,6 +90,7 @@ class HTMLTest < Test::Unit::TestCase
 
     #assertions about what the route we just triggered
     assert last_response.ok?
+
     assert_equal File.new("./results/simpletest-multiple-part.ml").read, last_response.body
   end
 

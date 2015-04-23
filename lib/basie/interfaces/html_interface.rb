@@ -273,8 +273,8 @@ class Basie::HTMLInterface < Basie::Interface
 					res = table.data_by_query(column, query, :session => session)
 					case res
 					when Array
-						if res.length == 0; return 404; end
-						haml Basie::HTMLInterface.to_table(res, tabl)
+						return 404 if res.length == 0
+						haml Basie::HTMLInterface.to_table(res, table)
 					when Hash; haml Basie::HTMLInterface.to_dl(res, table)
 					end
 				rescue ArgumentError

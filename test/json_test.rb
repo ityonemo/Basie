@@ -17,6 +17,7 @@ class JSONTest < Test::Unit::TestCase
   def setup
     $BS = Basie.new :name => "testdb"
     Basie.activate :JSON
+    $BS.enable_full_access
     create :simpletest
   end
 
@@ -66,7 +67,10 @@ class JSONTest < Test::Unit::TestCase
     #get one line where we've preselected the data
 
     #get just one line
+
+    puts "hi mom"
     get('/json/simpletest/test/two')
+    puts "hi dad"
 
     #assertions about what the route we just triggered
     assert last_response.ok?
@@ -87,6 +91,7 @@ class JSONRouteTests < Test::Unit::TestCase
   def setup
     app.reset!
     $BS = Basie.new :name => "testdb"
+    $BS.enable_full_access
   end
 
   def teardown

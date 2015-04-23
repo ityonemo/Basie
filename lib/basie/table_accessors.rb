@@ -90,29 +90,16 @@ class Basie::Table
 	private :select_modifier_string
 
 	def select_access_string(session, connector = :WHERE)
-		puts "1"
-
 		raise SecurityError("no security set") unless @basie.access_control?
 
-		puts "2"
 		#returns the select part that deal with access.
-		begin
-			puts @public_access.inspect
 
-			access = (session[:login] ? session[:access][@name] : @public_access)[:read]
-		rescue => c
-			puts c.inspect
-		end
+		access = (session[:login] ? session[:access][@name] : @public_access)[:read]
 
-		puts "3"
 		#if we get nil, that means that access is denied.
 		raise SecurityError("access denied") unless access
-
-		puts "4"
 		#now we need to stitch the appropriate connector in here
 		unless access == ""
-
-			puts "5"
 			#useful/valid connectors are WHERE or AND, note MySQL is not case sensitive
 			#so a lower-case one is just peachy keen.
 			access.prepend("#{connector} ")
@@ -135,12 +122,7 @@ class Basie::Table
 		#you can pass a list of tags to restore, or, all of them.
 
 		#generate the suppression list by filtering out the restored tags (if applicable)
-		puts "hi dad"
-
 		@basie.connect do |db|
-
-			puts "hi mom"
-
 			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{select_access_string(params[:session])}").all,
 			  :preserve => true,
 			  :suppresslist => @suppresslist,
@@ -207,10 +189,13 @@ class Basie::Table
 		#returns table data by general column query
 
 		@basie.connect do |db|
-			prc = process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}' #{select_access_string(params[:session],:AND)}").all,
+			begin
+			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}' #{select_access_string(params[:session],:AND)}").all,
 			    :suppresslist => @suppresslist,
 			    :restore => params[:restore]
-			prc
+			rescue => c
+				puts c.inspect
+			end
 		end
 	end
 
