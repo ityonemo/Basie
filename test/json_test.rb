@@ -68,9 +68,7 @@ class JSONTest < Test::Unit::TestCase
 
     #get just one line
 
-    puts "hi mom"
     get('/json/simpletest/test/two')
-    puts "hi dad"
 
     #assertions about what the route we just triggered
     assert last_response.ok?

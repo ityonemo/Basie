@@ -109,12 +109,12 @@ class Basie::Table
 
 	def access_filter_input_hash(session, content)
 		raise SecurityError("no security set") unless @basie.access_control?
-		#find the filter, this should be a lambda.
+		#find the filter, this should be a lambda definition.
 		accessfilter = (session[:login] ? session[:access][@name] : @public_access)[:write]
 		#a nil result suggests that access is denied
 		raise SecurityError("access denied") unless accessfilter
-		#filter the content.
-		accessfilter.call(content)
+		#compile the access filter string into an executeable, then filter the content
+		eval("lambda" + accessfilter).call(content)
 	end
 
 	def entire_table(params={})
@@ -189,13 +189,9 @@ class Basie::Table
 		#returns table data by general column query
 
 		@basie.connect do |db|
-			begin
 			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}' #{select_access_string(params[:session],:AND)}").all,
 			    :suppresslist => @suppresslist,
 			    :restore => params[:restore]
-			rescue => c
-				puts c.inspect
-			end
 		end
 	end
 

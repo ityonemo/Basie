@@ -14,6 +14,10 @@ class TableTest < Test::Unit::TestCase
     Sinatra::Application
   end
 
+  def setup
+    @session = {:login => nil}
+  end
+
   #TEST CREATING A TABLE.  These methods should emanate from the basie object.
 
   def teardown
@@ -92,7 +96,8 @@ class TableTest < Test::Unit::TestCase
     $BS.enable_full_access
 
     create :simpletest
-    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}],
+      $BS.tables[:simpletest].entire_table(:session => @session)
   end
 
   def test_data_by_id
@@ -100,7 +105,8 @@ class TableTest < Test::Unit::TestCase
     $BS.enable_full_access
 
     create :simpletest
-    assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_id(1))
+    assert_equal(({:id=>1, :test=>"one"}),
+      $BS.tables[:simpletest].data_by_id(1, :session => @session))
   end
 
   def test_data_by_query
@@ -108,7 +114,8 @@ class TableTest < Test::Unit::TestCase
     $BS.enable_full_access
 
     create :simpletest
-    assert_equal(({:id=>1, :test=>"one"}), $BS.tables[:simpletest].data_by_query(:test, "one"))
+    assert_equal(({:id=>1, :test=>"one"}),
+      $BS.tables[:simpletest].data_by_query(:test, "one", :session => @session))
   end
 
   def test_data_by_dual_query
@@ -116,7 +123,8 @@ class TableTest < Test::Unit::TestCase
     $BS.enable_full_access
 
     create :simpletest
-    assert_equal([{:id=>2, :test=>"two"}, {:id=>3, :test=>"two"}], $BS.tables[:simpletest].data_by_query(:test, "two"))
+    assert_equal([{:id=>2, :test=>"two"}, {:id=>3, :test=>"two"}],
+      $BS.tables[:simpletest].data_by_query(:test, "two", :session => @session))
   end
 
   ######################################################################################
@@ -128,8 +136,8 @@ class TableTest < Test::Unit::TestCase
 
     $BS.connect{|db| db.drop_table? :simpletest}
     $BS.create :simpletest
-    $BS.tables[:simpletest].insert_data(:test => "one")
-    assert_equal [{:id=>1, :test=>"one"}], $BS.tables[:simpletest].entire_table
+    $BS.tables[:simpletest].insert_data({:test => "one"}, :session => @session)
+    assert_equal [{:id=>1, :test=>"one"}], $BS.tables[:simpletest].entire_table(:session => @session)
   end
 
   def test_insert_data_array
@@ -138,8 +146,9 @@ class TableTest < Test::Unit::TestCase
 
     $BS.connect{|db| db.drop_table? :simpletest}
     $BS.create :simpletest
-    $BS.tables[:simpletest].insert_data([{:test => "one"},{:test => "two"}])
-    assert_equal [{:id=>1, :test=>"one"}, {:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table
+
+    $BS.tables[:simpletest].insert_data([{:test => "one"},{:test => "two"}], :session => @session)
+    assert_equal [{:id=>1, :test=>"one"}, {:id=>2, :test=>"two"}], $BS.tables[:simpletest].entire_table(:session => @session)
   end
 
   def test_update_data_by_id
@@ -147,8 +156,9 @@ class TableTest < Test::Unit::TestCase
     $BS.enable_full_access
 
     create :simpletest
-    $BS.tables[:simpletest].update_data(1, {:test => "substituted"})
-    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table
+    $BS.tables[:simpletest].update_data(1, {:test => "substituted"}, :session => @session)
+    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}],
+      $BS.tables[:simpletest].entire_table(:session => @session)
   end
 
   #############################################################################3
@@ -159,7 +169,7 @@ class TableTest < Test::Unit::TestCase
     $BS.enable_full_access
 
     create :simpletest
-    assert_raise (Basie::NoIdError){$BS.tables[:simpletest].data_by_id(4)}
+    assert_raise (Basie::NoIdError){$BS.tables[:simpletest].data_by_id(4, :session => @session)}
   end
 
   def test_update_data_nonexistent_id
@@ -167,6 +177,6 @@ class TableTest < Test::Unit::TestCase
     $BS.enable_full_access
 
     create :simpletest
-    assert_raise (Basie::NoIdError){$BS.tables[:simpletest].update_data(4, {:test => "substituted"})}
+    assert_raise (Basie::NoIdError){$BS.tables[:simpletest].update_data(4, {:test => "substituted"}, :session => @session)}
   end
 end

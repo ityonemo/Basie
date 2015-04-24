@@ -125,28 +125,27 @@ class Basie::UserInterface < Basie::Interface
 
 					#first retrieve the user name from the user table.
 					q = table.data_by_query(Basie::UserInterface.logincolumn,
-					  params[Basie::UserInterface.logincolumn.to_s], :restore => [:passhash])
+					  params[Basie::UserInterface.logincolumn.to_s], :restore => [:passhash], :session => session)
 
-					unless q
-						return 403
-					end
+
+					return 403 unless q
 
 					#load up the passhash from the table into SCrypt and check it against the supplied password.
 					if Basie::UserInterface.check(q[:passhash], params["password"],
 						params[Basie::UserInterface.logincolumn.to_s])
+
 						#set the login cookie
 
 						session[:login] = params[Basie::UserInterface.logincolumn.to_s]
 
 						#set our session access variables
-						Basie::set_session_access(q)
+						table.basie.set_session_access(q, session)
 
 						#look to see if we have a redirect element.
-						if params["redirect"]
+						if params.has_key?("redirect")
 							#then redirect
 							redirect params["redirect"]
 						else
-							#or do nothing.
 							200
 						end
 					else

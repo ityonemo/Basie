@@ -13,12 +13,12 @@ class Basie::POSTInterface < Basie::Interface
 
 		tableroot = "#{@root}/#{table.name}"
 
-		app.post(tableroot) do 
+		app.post(tableroot) do
 			#toss out parameters that aren't the ones we care about.  Also drop out :id and :hash parameters in case of adversarial attempts
-			
+
 			p = params.reject{|col, val| c = col.to_sym; (!table.columns.has_key?(c) || c == :id || c == :hash)}
 
-			table.insert_data(p)
+			table.insert_data(p, :session => session)
 			201
 		end
 
@@ -26,8 +26,9 @@ class Basie::POSTInterface < Basie::Interface
 			#toss out parameters that aren't the ones we care about. Also drop out :id and :hash parameters in case of adversarial attempts
 
 			p = params.reject{|col, val| c = col.to_sym; (!table.columns.has_key?(c) || c == :id || c == :hash)}
+
 			begin
-				table.update_data(id, p)
+				table.update_data(id, p, :session => session)
 				201
 			rescue ArgumentError => e
 				400

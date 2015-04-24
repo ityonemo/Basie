@@ -118,7 +118,7 @@ class Basie
 	# the output to prevent leaking sensitive material.  The hash may contain nil,
 	# signifying an access error.
 
-	# The write subvalue is a lookup table specifying a lambda which takes a
+	# The write subvalue is a string defining a block lambda which takes a
 	# potential input and filters it prohibiting malicious input.  The lambda may
 	# output nil, signifying an access error.
 
@@ -206,10 +206,6 @@ class Basie
 		end
 	end
 
-	def set_public_access
-		@tables.each_value{|t| t.set_public_access}
-	end
-
 	#an internal procedure that disposes of all of Basie's tables and views in an orderly fashion.
 	#this mostly exists for testing purposes.
 	def cleanup
@@ -229,7 +225,8 @@ class Basie
 			#we're going to ignore the x value which is normally used to specify either
 			#:public, or the user information.  We don't care, we're going to enable
 			#full access for everyone.
- 			{:read => "", :write => (lambda {|l| l})}
+
+ 			{:read => "", :write => "{|l| l}"}
 		end)
 	end
 end
