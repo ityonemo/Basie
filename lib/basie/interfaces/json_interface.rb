@@ -38,9 +38,12 @@ class Basie::JSONInterface < Basie::Interface
 		#register a path to the table.
 		route_check(:table) do
 			app.get (tableroot) do
-				content_type :json
-
-				table.entire_table(:session => session).to_json
+				begin
+					content_type :json
+					table.entire_table(:session => session).to_json
+				rescue SecurityError
+					403
+				end
 			end
 		end
 
@@ -49,6 +52,8 @@ class Basie::JSONInterface < Basie::Interface
 				begin
 					content_type :json
 					table.data_by_id(id, :session => session).to_json
+				rescue SecurityError
+					403
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError
@@ -66,6 +71,8 @@ class Basie::JSONInterface < Basie::Interface
 				begin
 					content_type :json
 					table.data_by_query(column, query, :session => session).to_json
+				rescue SecurityError
+					403
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError

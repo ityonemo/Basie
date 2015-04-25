@@ -240,11 +240,13 @@ class Basie::HTMLInterface < Basie::Interface
 		#register a path to the table.
 		route_check(:table) do
 			app.get (tableroot) do
-
-				#get the data
-				res = table.entire_table(:session => session)
-
-				haml Basie::HTMLInterface.to_table(res, table)
+				begin
+					#get the data
+					res = table.entire_table(:session => session)
+					haml Basie::HTMLInterface.to_table(res, table)
+				rescue SecurityError
+					403
+				end
 			end
 		end
 
@@ -257,6 +259,8 @@ class Basie::HTMLInterface < Basie::Interface
 					res = table.data_by_id(query, :session => session)
 
 					haml Basie::HTMLInterface.to_dl(res, table)
+				rescue SecurityError
+					403
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError
@@ -277,6 +281,8 @@ class Basie::HTMLInterface < Basie::Interface
 						haml Basie::HTMLInterface.to_table(res, table)
 					when Hash; haml Basie::HTMLInterface.to_dl(res, table)
 					end
+				rescue SecurityError
+					403
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError

@@ -76,11 +76,15 @@ class Basie::CSVInterface < Basie::Interface
 		#register a path to the table.
 		route_check(:table) do
 			app.get (tableroot) do
-				content_type :csv
+				begin
+					content_type :csv
 
-				res = table.entire_table(:session => session)
+					res = table.entire_table(:session => session)
 
-				Basie::CSVInterface.to_csv(res)
+					Basie::CSVInterface.to_csv(res)
+				rescue SecurityError
+					403
+				end
 			end
 		end
 
@@ -90,6 +94,8 @@ class Basie::CSVInterface < Basie::Interface
 					content_type :csv
 					res = table.data_by_id(id, :session => session)
 					Basie::CSVInterface.to_csv(res)
+				rescue SecurityError
+					403
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError
@@ -104,6 +110,8 @@ class Basie::CSVInterface < Basie::Interface
 					content_type :csv
 					res = table.data_by_query(column, query, :session => session)
 					Basie::CSVInterface.to_csv(res)
+				rescue SecurityError
+					403
 				rescue ArgumentError
 					400
 				rescue Basie::NoEntryError

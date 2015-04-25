@@ -128,3 +128,12 @@ def data_suppresstest(db)
   db[:suppresstest].insert(:test => "test 1", :test2 => "test 2", :test3 => "test 3", :test4 => "test 4")
   $BS.tables[:suppresstest].brandhash(1)
 end
+
+def data_securitydata(db)
+  db[:securitydata].insert({:data => 1, :owner => 1})
+  $BS.tables[:securitydata].brandhash(1)
+  db[:securitydata].insert({:data => 2, :owner => 2})
+  $BS.tables[:securitydata].brandhash(2)
+  db[:securitydata].insert({:data => 3, :owner => 1})
+  $BS.tables[:securitydata].brandhash(3)
+end

@@ -90,14 +90,14 @@ class Basie::Table
 	private :select_modifier_string
 
 	def select_access_string(session, connector = :WHERE)
-		raise SecurityError("no security set") unless @basie.access_control?
+		raise SecurityError, "no security set" unless @basie.access_control?
 
 		#returns the select part that deal with access.
-
 		access = (session[:login] ? session[:access][@name] : @public_access)[:read]
 
 		#if we get nil, that means that access is denied.
-		raise SecurityError("access denied") unless access
+		return nil unless access
+
 		#now we need to stitch the appropriate connector in here
 		unless access == ""
 			#useful/valid connectors are WHERE or AND, note MySQL is not case sensitive
@@ -108,25 +108,33 @@ class Basie::Table
 	end
 
 	def access_filter_input_hash(session, content)
-		raise SecurityError("no security set") unless @basie.access_control?
+		raise SecurityError, "no security set" unless @basie.access_control?
+
 		#find the filter, this should be a lambda definition.
 		accessfilter = (session[:login] ? session[:access][@name] : @public_access)[:write]
+
 		#a nil result suggests that access is denied
-		raise SecurityError("access denied") unless accessfilter
+		return nil unless accessfilter
 		#compile the access filter string into an executeable, then filter the content
+
 		eval("lambda" + accessfilter).call(content)
 	end
 
 	def entire_table(params={})
 		#returns the entire table as a ruby object.
 		#you can pass a list of tags to restore, or, all of them.
-
 		#generate the suppression list by filtering out the restored tags (if applicable)
 		@basie.connect do |db|
-			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{select_access_string(params[:session])}").all,
-			  :preserve => true,
-			  :suppresslist => @suppresslist,
-			  :restore => params[:restore]
+			accessfilter = select_access_string(params[:session])
+
+			if accessfilter
+				process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{accessfilter}").all,
+					:preserve => true,
+					:suppresslist => @suppresslist,
+					:restore => params[:restore]
+			else
+				raise SecurityError, "access disallowed"
+			end
 		end
 	end
 

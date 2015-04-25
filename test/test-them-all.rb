@@ -26,3 +26,6 @@ require_relative 'html_format_test'
 
 require_relative 'user_test'
 require_relative 'user_format_test'
+
+#security
+require_relative 'security_test'

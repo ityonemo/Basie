@@ -1,0 +1,6 @@
+#security data basie file
+#use_hash
+primary_key	:id
+String      :hash
+Integer     :data
+foreign_key :owner, :usertest
