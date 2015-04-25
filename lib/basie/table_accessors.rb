@@ -122,139 +122,165 @@ class Basie::Table
 
 	def entire_table(params={})
 		#returns the entire table as a ruby object.
-		#you can pass a list of tags to restore, or, all of them.
-		#generate the suppression list by filtering out the restored tags (if applicable)
-		@basie.connect do |db|
-			accessfilter = select_access_string(params[:session])
 
-			if accessfilter
-				process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{accessfilter}").all,
-					:preserve => true,
-					:suppresslist => @suppresslist,
-					:restore => params[:restore]
-			else
-				raise SecurityError, "access disallowed"
-			end
+		#check to see if access is disallowed by the security parameters
+		accessfilter = select_access_string(params[:session])
+		raise SecurityError, "access disallowed" unless accessfilter
+
+		@basie.connect do |db|
+			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{accessfilter}").all,
+				:preserve => true,
+				:suppresslist => @suppresslist,
+				:restore => params[:restore]
 		end
 	end
 
 	def data_by_id(id, params={})
-		res = nil
 		#returns the table data by row id (primary or hash key)
 
-		@basie.connect do |db|
+		#check to see if access is disallowed by the security parameters
+		accessfilter = select_access_string(params[:session], :AND)
+		raise SecurityError, "access disallowed" unless accessfilter
 
-			if (is_hash?(id))
-				#double check to make sure our table supports hashes if we're sending a hash.
-				raise(Basie::HashUnavailableError, "bad input") unless @settings[:use_hash]
+		#an object to store the result
+		res = nil
 
-				#create the (admittedly complicated) query
-				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.hash = '#{id}' #{select_access_string(params[:session],:AND)}").first
+		if (is_hash?(id))
+			#the query looks like a hash query. double check to make sure our table
+			#supports hashes since we're sending a hash.
+			raise Basie::HashUnavailableError, "bad input" unless @settings[:use_hash]
 
-				#a nil result means the hash didn't exist
-				res == nil ? (raise Basie::NoHashError.new("hash not found")) : res
-			elsif (Fixnum === id) || (id.to_i.to_s == id)
+			#create the query
+			q = "SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.hash = '#{id}' #{accessfilter}"
 
-				#don't allow the use of ids if we're supposed to use hashes.
-				raise(Basie::IdForbiddenError, "bad input")	if (@settings[:use_hash])
+			#connect and pull the results of the query
+			res = @basie.connect {|db| db.fetch(q).first}
 
-				#create the query.
-				res = db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.id = '#{id}' #{select_access_string(params[:session],:AND)}").first
+			#a nil result means the hash didn't exist
+			raise Basie::NoHashError, "hash not found" unless res
 
-				#a nil result means the id wasn't found.
-				res == nil ? (raise Basie::NoIdError.new("id not found")) : res
-			else
-				raise(Basie::HashError, "malformed hash")
-			end
-			process res,
-			  :suppresslist => @suppresslist,
-			  :restore => params[:restore]
+		elsif (Fixnum === id) || (id.to_i.to_s == id)
+
+			#don't allow the use of ids if we're supposed to use hashes.
+			raise Basie::IdForbiddenError, "bad input" if @settings[:use_hash]
+
+			#create the query.
+			q = "SELECT #{csel} FROM #{@name} #{select_modifier_string} WHERE #{@name}.id = '#{id}' #{accessfilter}"
+
+			#connect and pull the results of the query
+			res = @basie.connect{|db| db.fetch(q).first}
+
+			#a nil result means the id wasn't found.
+			raise Basie::NoIdError, "id not found" unless res
+		else
+			raise Basie::HashError, "malformed hash"
 		end
+
+		#make it look nice and return the result.
+		process res, :suppresslist => @suppresslist, :restore => params[:restore]
 	end
 
 	def data_by_label(search, params={})
+		#check to see if this table has labels available.
 		raise Basie::LabelUnavailableError, "label not available for this table" unless @settings[:use_label]
 
-		#returns table data by default label key.
-		@basie.connect do |db|
-			#generate the search column text
+		#check to see if access is disallowed by the security parameters
+		accessfilter = select_access_string(params[:session], :AND)
+		raise SecurityError, "access disallowed" unless accessfilter
 
-			cstmt = ""
+		#generate the search column text
+		cstmt = (@settings[:use_label].length == 1) ? @settings[:use_label][0] : "CONCAT(" + @settings[:use_label].join(",") + ")"
 
-			if @settings[:use_label].length == 1
-				cstmt = @settings[:use_label][0]
-			else
-				cstmt = "CONCAT(" + @settings[:use_label].join(",") + ")"
-			end
+		#generate the query text from the search statement and the other parameters.
+		q = "SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}' #{accessfilter}"
 
-			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{cstmt} = '#{search}' #{select_access_string(params[:session],:AND)}").all,
-			  :suppresslist => @suppresslist,
+		#connect to the database and then process the data.
+		process @basie.connect{|db| db.fetch(q).all},
+				:suppresslist => @suppresslist,
 			  :restore => params[:restore]
-		end
 	end
 
 	def data_by_query(column, query, params={})
 		#returns table data by general column query
 
-		@basie.connect do |db|
-			process db.fetch("SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}' #{select_access_string(params[:session],:AND)}").all,
+		#check to see if access is disallowed by the security parameters.
+		accessfilter = select_access_string(params[:session], :AND)
+		raise SecurityError, "access disallowed" unless accessfilter
+
+		#generate the search column text
+		q = "SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}' #{accessfilter}"
+
+		#connect to the database and process the data.
+		process @basie.connect {|db| db.fetch(q).all},
 			    :suppresslist => @suppresslist,
 			    :restore => params[:restore]
-		end
 	end
 
 	def insert_data(data, params = {})
-		#runs a basic insert.
-		@basie.connect do |db|
-			#data could be an array or a hash.
-			case (data)
-			when Array
-				#if it's an array, it's more than one data hashes.
+		#runs a basic insert on variadic (Array/Hash) data
+		#in the case of an array, it should be a series of input-ok hashes
+		#in the case of a hash, it should be key/value pairs that correspond to
+		#column/data.
+		case (data)
+		when Array
+			#if it's an array, it's more than one data hashes.
+			@basie.connect do |db|
 				data.each do |datum|
+					#filter our data based on security preferences
 					datum = access_filter_input_hash(params[:session], datum)
+					raise SecurityError, "access disallowed" unless datum
+
+					#actually insert the data, then brand the data if necessary
 					id = db[@name].insert(datum)
 					brandhash(id)
 				end
-			when Hash
-				datum = access_filter_input_hash(params[:session], datum)
+			end
+		when Hash
+			basie.connect do |db|
+				#filter our data based on security preferences
+				data = access_filter_input_hash(params[:session], data)
+				raise SecurityError, "access disallowed" unless data
+
+				#actually insert the data, then brand the data, if necessary
 				id = db[@name].insert(data)
-				#brand the hash, since we have inserted new data
 				brandhash(id)
 			end
+		else raise ArgumentError, "insert_data must take an Array or Hash"
 		end
 	end
 
 	def update_data(id, data, params = {})
 		#a basic update should be a single item.
-		#please remove the :id key when updating via id, and the :hash and :id keys when updating via identifier.
 
-		#filter the input hash
-		datum = access_filter_input_hash(params[:session], datum)
+		#create a placeholder variable for the result.
+		res = nil
 
-		@basie.connect do |db|
-			if (is_hash?(id))
+		#filter the input hash, and throw an error if write is disallowed.
+		data = access_filter_input_hash(params[:session], data)
+		raise SecurityError, "access disallowed" unless data
 
-				#hashes to hashes
-				raise(Basie::HashUnavailableError, "bad input") unless @settings[:use_hash]
+		if (is_hash?(id))
+			#hashes to hashes
+			raise Basie::HashUnavailableError, "bad input" unless @settings[:use_hash]
 
-				#create the query
-				res = db[@name].where(:hash => id).update(data)
+			#create and execute the updating query
+			res = @basie.connect {|db| db[@name].where(:hash => id).update(data)}
 
-				#double check to see if executed
-				res == 0 ? raise(Basie::NoHashError, "hash doesn't exist") : res
-			elsif (Fixnum === id) || (id.to_i.to_s == id)
+			#double check to see if executed.  In this case, res returns # of rows changed
+			raise Basie::NoHashError, "hash doesn't exist" unless res == 1
+		elsif (Fixnum === id) || (id.to_i.to_s == id)
+			#idust to idust
+			raise Basie::IdForbiddenError, "bad input" if @settings[:use_hash]
 
-				#idust to idust
-				raise(Basie::IdForbiddenError, "bad input") if (@settings[:use_hash])
+			#try and ind it and update it.
+			res = @basie.connect {|db| db[@name].where(:id => id).update(data)}
 
-				#try and ind it and update it.
-				res = db[@name].where(:id => id).update(data)
-
-				#check to see if it executed, and raise the appropriate error if not.
-				res == 0 ? raise(Basie::NoIdError, "id doesn't exist") : res
-			else
-				raise(Basie::HashError, "malformed hash")
-			end
+			#check to see if it executed, and raise the appropriate error if not.
+			#in this case, res returns # of rows changed.
+			raise Basie::NoIdError, "id doesn't exist" unless res == 1
+		else
+			raise Basie::HashError, "malformed hash"
 		end
+		res
 	end
 end

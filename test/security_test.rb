@@ -57,6 +57,11 @@ class SecurityTest < Test::Unit::TestCase
     #get the whole table
     get('/json/securitydata')
     assert_equal 403, last_response.status
+
+    #get just one index
+
+    #attempt to write
+    
   end
 
 end
