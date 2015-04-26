@@ -58,7 +58,7 @@ class SecurityTest < Test::Unit::TestCase
     #and logged in parties to have full access
     public_restrict = lambda do |x, t|
       if x == :public
-        {:read => nil, :write => nil}
+        {:read => nil, :write => "nil"}
       else
         {:read => "", :write => "{|l| l}"}
       end
@@ -75,11 +75,20 @@ class SecurityTest < Test::Unit::TestCase
     #test html
     test403s("/html")
 
+    original_data = $BS.tables[:securitydata].entire_table(:override_security => true)
     #test writing a data entry
     post "/db/securitydata", :params => {"data":4,"owner":1}
     assert_equal 403, last_response.status
     #double check the integrity of the table.
-    puts $BS.tables[:securitydata].entire_table(:override_security => true)
+    assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
+
+    #test replacing a data entry
+    post "/db/securitydata/gHroYdCkdch8", :params => {"data":4,"owner":1}
+    assert_equal 403, last_response.status
+    #double check the integrity of the table.
+    assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
+
+    #test using CSV
   end
 
 end

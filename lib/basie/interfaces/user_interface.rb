@@ -125,7 +125,7 @@ class Basie::UserInterface < Basie::Interface
 
 					#first retrieve the user name from the user table.
 					q = table.data_by_query(Basie::UserInterface.logincolumn,
-					  params[Basie::UserInterface.logincolumn.to_s], :restore => [:passhash], :session => session)
+					  params[Basie::UserInterface.logincolumn.to_s], :restore => [:passhash], :override_security => true)
 
 
 					return 403 unless q

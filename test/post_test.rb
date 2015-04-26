@@ -37,7 +37,7 @@ class POSTTest < Test::Unit::TestCase
     assert last_response.success?
 
     #make sure that the table looks as it should.
-    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"},{:id=>4, :test=>"four"}], $BS.tables[:simpletest].entire_table(:session => {})
+    assert_equal [{:id=>1, :test=>"one"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"},{:id=>4, :test=>"four"}], $BS.tables[:simpletest].entire_table(:override_security => true)
   end
 
   def test_post_update_data
@@ -45,7 +45,7 @@ class POSTTest < Test::Unit::TestCase
     #make sure this responded ok
     assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
-    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table(:session => {})
+    assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}], $BS.tables[:simpletest].entire_table(:override_security => true)
   end
 
   def test_post_update_data_with_hash
@@ -56,7 +56,7 @@ class POSTTest < Test::Unit::TestCase
     #make sure note that the result is that the first id item has been changed.
     assert_equal [{:hash=>"G-qeUNuU2Ow8",:content=>"substituted"},
                   {:hash=>"bL_u2i6J__oH",:content=>"test 2"},
-                  {:hash=>"skIgcPU7DmIR",:content=>"test 3"}], $BS.tables[:hashtest].entire_table(:session => {})
+                  {:hash=>"skIgcPU7DmIR",:content=>"test 3"}], $BS.tables[:hashtest].entire_table(:override_security => true)
   end
 
   #####################################################################################333
@@ -81,7 +81,7 @@ class POSTTest < Test::Unit::TestCase
     assert last_response.success?
     #make sure note that the result is that the first id item has been changed.
     assert_equal [{:id=>1, :test=>"substituted"},{:id=>2, :test=>"two"},{:id=>3, :test=>"two"}],
-     $BS.tables[:simpletest].entire_table(:session => {})
+     $BS.tables[:simpletest].entire_table(:override_security => true)
   end
 
   def test_attempt_to_overwrite_hash
@@ -91,8 +91,8 @@ class POSTTest < Test::Unit::TestCase
     #make sure note that the result is that the first id item has been changed.
     assert_equal [{:hash=>"G-qeUNuU2Ow8",:content=>"substituted"},
                   {:hash=>"bL_u2i6J__oH",:content=>"test 2"},
-                  {:hash=>"skIgcPU7DmIR",:content=>"test 3"}],           
-      $BS.tables[:hashtest].entire_table(:session => {})
+                  {:hash=>"skIgcPU7DmIR",:content=>"test 3"}],
+      $BS.tables[:hashtest].entire_table(:override_security => true)
   end
 
 end

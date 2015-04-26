@@ -40,7 +40,7 @@ class HashTest < Test::Unit::TestCase
   ## TESTING TABLE ACCESSORS
 
   def test_access_data_by_hash
-    assert_equal({:hash=>"G-qeUNuU2Ow8",:content=>"test 1"}, $BS.tables[:hashtest].data_by_id('G-qeUNuU2Ow8', :override_security => true)
+    assert_equal({:hash=>"G-qeUNuU2Ow8",:content=>"test 1"}, $BS.tables[:hashtest].data_by_id('G-qeUNuU2Ow8', :override_security => true))
   end
 
   def test_insert_data_with_hash
