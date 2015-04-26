@@ -124,7 +124,7 @@ class Basie::Table
 		#returns the entire table as a ruby object.
 
 		#check to see if access is disallowed by the security parameters
-		accessfilter = select_access_string(params[:session])
+		accessfilter = params[:override_security] ? "" : select_access_string(params[:session])
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		@basie.connect do |db|
@@ -139,7 +139,7 @@ class Basie::Table
 		#returns the table data by row id (primary or hash key)
 
 		#check to see if access is disallowed by the security parameters
-		accessfilter = select_access_string(params[:session], :AND)
+		accessfilter = params[:override_security] ? "" : select_access_string(params[:session], :AND)
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		#an object to store the result
@@ -185,7 +185,7 @@ class Basie::Table
 		raise Basie::LabelUnavailableError, "label not available for this table" unless @settings[:use_label]
 
 		#check to see if access is disallowed by the security parameters
-		accessfilter = select_access_string(params[:session], :AND)
+		accessfilter = params[:override_security] ? "" : select_access_string(params[:session], :AND)
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		#generate the search column text
@@ -204,7 +204,7 @@ class Basie::Table
 		#returns table data by general column query
 
 		#check to see if access is disallowed by the security parameters.
-		accessfilter = select_access_string(params[:session], :AND)
+		accessfilter = params[:override_security] ? "" : select_access_string(params[:session], :AND)
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		#generate the search column text
@@ -227,7 +227,7 @@ class Basie::Table
 			@basie.connect do |db|
 				data.each do |datum|
 					#filter our data based on security preferences
-					datum = access_filter_input_hash(params[:session], datum)
+					datum = params[:override_securty] ? datum : access_filter_input_hash(params[:session], datum)
 					raise SecurityError, "access disallowed" unless datum
 
 					#actually insert the data, then brand the data if necessary
@@ -238,7 +238,9 @@ class Basie::Table
 		when Hash
 			basie.connect do |db|
 				#filter our data based on security preferences
-				data = access_filter_input_hash(params[:session], data)
+
+				data = params[:override_security] ? data : access_filter_input_hash(params[:session], data)
+
 				raise SecurityError, "access disallowed" unless data
 
 				#actually insert the data, then brand the data, if necessary
@@ -256,7 +258,7 @@ class Basie::Table
 		res = nil
 
 		#filter the input hash, and throw an error if write is disallowed.
-		data = access_filter_input_hash(params[:session], data)
+		data = params[:override_security] ? data : access_filter_input_hash(params[:session], data)
 		raise SecurityError, "access disallowed" unless data
 
 		if (is_hash?(id))

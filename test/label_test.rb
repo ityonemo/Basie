@@ -43,7 +43,7 @@ class LabelTest < Test::Unit::TestCase
   ## TESTING TABLE ACCESSORS
 
   def test_access_data_by_labels
-    assert_equal({:hash=>"NCfF2hpltsLo", :rightcontent=>"nana"}, $BS.tables[:righttest_label].data_by_label('nana', :session => {}))
+    assert_equal({:hash=>"NCfF2hpltsLo", :rightcontent=>"nana"}, $BS.tables[:righttest_label].data_by_label('nana', :override_security => true))
   end
 
 end

@@ -18,8 +18,12 @@ class Basie::POSTInterface < Basie::Interface
 
 			p = params.reject{|col, val| c = col.to_sym; (!table.columns.has_key?(c) || c == :id || c == :hash)}
 
-			table.insert_data(p, :session => session)
-			201
+			begin
+				table.insert_data(p, :session => session)
+				201
+			rescue SecurityError
+				403
+			end
 		end
 
 		app.post(tableroot + "/:id") do |id|
@@ -30,7 +34,9 @@ class Basie::POSTInterface < Basie::Interface
 			begin
 				table.update_data(id, p, :session => session)
 				201
-			rescue ArgumentError => e
+			rescue SecurityError
+				403
+			rescue ArgumentError
 				400
 			rescue Basie::NoHashError, Basie::NoIdError
 				404

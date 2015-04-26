@@ -17,7 +17,7 @@ class SecurityTest < Test::Unit::TestCase
 
   def setup
     $BS = Basie.new :name => "testdb"
-    Basie.activate [:JSON, :User]
+    Basie.activate [:JSON, :HTML, :CSV, :POST, :User]
   end
 
   def teardown
@@ -39,6 +39,20 @@ class SecurityTest < Test::Unit::TestCase
     assert_equal File.new("./results/securitydata.json").read, last_response.body
   end
 
+  def test403s(prefix)
+    #get the entire table
+    get(prefix + "/securitydata")
+    assert_equal 403, last_response.status
+
+    #get by hash
+    get(prefix + "/securitydata/gHroYdCkdch8")
+    assert_equal 403, last_response.status
+
+    #get by query
+    get(prefix + "/securitydata/owner/1")
+    assert_equal 403, last_response.status
+  end
+
   def test_public_restriction
     #write a security lambda that defines public to have no access
     #and logged in parties to have full access
@@ -54,14 +68,18 @@ class SecurityTest < Test::Unit::TestCase
 
     create [:usertest, :securitydata]
 
-    #get the whole table
-    get('/json/securitydata')
+    #test json
+    test403s("/json")
+    #test csv
+    test403s("/csv")
+    #test html
+    test403s("/html")
+
+    #test writing a data entry
+    post "/db/securitydata", :params => {"data":4,"owner":1}
     assert_equal 403, last_response.status
-
-    #get just one index
-
-    #attempt to write
-    
+    #double check the integrity of the table.
+    puts $BS.tables[:securitydata].entire_table(:override_security => true)
   end
 
 end

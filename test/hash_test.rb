@@ -40,24 +40,24 @@ class HashTest < Test::Unit::TestCase
   ## TESTING TABLE ACCESSORS
 
   def test_access_data_by_hash
-    assert_equal({:hash=>"G-qeUNuU2Ow8",:content=>"test 1"}, $BS.tables[:hashtest].data_by_id('G-qeUNuU2Ow8', :session => {}))
+    assert_equal({:hash=>"G-qeUNuU2Ow8",:content=>"test 1"}, $BS.tables[:hashtest].data_by_id('G-qeUNuU2Ow8', :override_security => true)
   end
 
   def test_insert_data_with_hash
-    $BS.tables[:hashtest].insert_data({:content => "test 4"}, :session => {})
+    $BS.tables[:hashtest].insert_data({:content => "test 4"}, :override_security => true)
 
     assert_equal [{:hash=>"G-qeUNuU2Ow8", :content=>"test 1"},
                   {:hash=>"bL_u2i6J__oH", :content=>"test 2"},
                   {:hash=>"skIgcPU7DmIR", :content=>"test 3"},
-                  {:hash=>"0nMgA4Q61XNv", :content=>"test 4"}], $BS.tables[:hashtest].entire_table(:session => {})
+                  {:hash=>"0nMgA4Q61XNv", :content=>"test 4"}], $BS.tables[:hashtest].entire_table(:override_security => true)
   end
 
   def test_update_data_with_hash
-    $BS.tables[:hashtest].update_data("G-qeUNuU2Ow8", {:content => "substituted"}, :session => {})
+    $BS.tables[:hashtest].update_data("G-qeUNuU2Ow8", {:content => "substituted"}, :override_security => true)
 
     assert_equal [{:hash=>"G-qeUNuU2Ow8", :content=>"substituted"},
                   {:hash=>"bL_u2i6J__oH", :content=>"test 2"},
-                  {:hash=>"skIgcPU7DmIR", :content=>"test 3"}], $BS.tables[:hashtest].entire_table(:session => {})
+                  {:hash=>"skIgcPU7DmIR", :content=>"test 3"}], $BS.tables[:hashtest].entire_table(:override_security => true)
   end
 
   ###########################################################################
@@ -65,28 +65,28 @@ class HashTest < Test::Unit::TestCase
 
   def test_bad_hash_inputs
     #test malformed input for hash data access
-    assert_raise (Basie::HashError){$BS.tables[:hashtest].data_by_id('not_a_real_hash', :session => {})}
+    assert_raise (Basie::HashError){$BS.tables[:hashtest].data_by_id('not_a_real_hash', :override_security => true)}
     #test well-formed but nonexistent input for hash data access
-    assert_raise (Basie::NoHashError){$BS.tables[:hashtest].data_by_id('HashNotThere', :session => {})}
+    assert_raise (Basie::NoHashError){$BS.tables[:hashtest].data_by_id('HashNotThere', :override_security => true)}
     #test for the case when there is no hash column.
-    assert_raise (Basie::HashUnavailableError){$BS.tables[:simpletest].data_by_id('HashNotThere', :session => {})}
+    assert_raise (Basie::HashUnavailableError){$BS.tables[:simpletest].data_by_id('HashNotThere', :override_security => true)}
     #test for the case when hashes should suppress ids.
-    assert_raise (Basie::IdForbiddenError){$BS.tables[:hashtest].data_by_id(1, :session => {})}
-    assert_raise (Basie::IdForbiddenError){$BS.tables[:hashtest].data_by_id('1', :session => {})}
+    assert_raise (Basie::IdForbiddenError){$BS.tables[:hashtest].data_by_id(1, :override_security => true)}
+    assert_raise (Basie::IdForbiddenError){$BS.tables[:hashtest].data_by_id('1', :override_security => true)}
 
     #test malformed input for hash data update
-    assert_raise (Basie::HashError){$BS.tables[:hashtest].update_data('not_a_real_hash', {:content => "not to be changed"}, :session => {})}
+    assert_raise (Basie::HashError){$BS.tables[:hashtest].update_data('not_a_real_hash', {:content => "not to be changed"}, :override_security => true)}
     #and make sure we haven't altered the table.
     assert_equal [{:hash=>"G-qeUNuU2Ow8", :content=>"test 1"},
                   {:hash=>"bL_u2i6J__oH", :content=>"test 2"},
-                  {:hash=>"skIgcPU7DmIR", :content=>"test 3"}], $BS.tables[:hashtest].entire_table(:session => {})
+                  {:hash=>"skIgcPU7DmIR", :content=>"test 3"}], $BS.tables[:hashtest].entire_table(:override_security => true)
 
     #test well-formed but nonexistent input for hash data update.
-    assert_raise (Basie::NoHashError){$BS.tables[:hashtest].update_data('HashNotThere', {:content => "not to be changed"}, :session => {})}
+    assert_raise (Basie::NoHashError){$BS.tables[:hashtest].update_data('HashNotThere', {:content => "not to be changed"}, :override_security => true)}
     #and make sure we haven't altered the table.
     assert_equal [{:hash=>"G-qeUNuU2Ow8", :content=>"test 1"},
                   {:hash=>"bL_u2i6J__oH", :content=>"test 2"},
-                  {:hash=>"skIgcPU7DmIR", :content=>"test 3"}], $BS.tables[:hashtest].entire_table(:session => {})
+                  {:hash=>"skIgcPU7DmIR", :content=>"test 3"}], $BS.tables[:hashtest].entire_table(:override_security => true)
   end
 
   #########################################################################
