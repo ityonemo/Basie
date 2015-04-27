@@ -12,12 +12,12 @@ class Basie::Interface
 	#a skeleton constructor makes sure this winds up in the interpreter list.
 	def initialize(params = {})
 		#allow the user to set the root as an override to whatever default is set by the constructor
-		if params.has_key?(:root)
+		if params[:root]
 			@root = params[:root]
 		else
 			params[:root] = @root
 		end
-
+		
 		#allow the user to set an array of routes, but if this is omitted, then set it to the token "all"
 		@routes = params[:routes] || :all
 
@@ -45,25 +45,4 @@ class Basie::Interface
 	def parse_for_column(column, column_comments); end
 
 	def setup_paths(table); end
-end
-
-#####################################################################
-## ALSO WE WILL DEFINE A USEFUL FUNCTION HERE FOR ALL TO SHARE.
-
-def Basie::rec_encode(ah)
-	# a recursive encoding function that works on arrays and hashes.
-	# designed to fix: strings to be UTF-8, BigDecimals to be strings.
-	if Array === ah
-		ah.map{|e| Basie::rec_encode(e)}
-	elsif Hash === ah
-		t = Hash.new
-		ah.each{|k,v| t[k] = Basie::rec_encode(v)}
-		t
-	elsif String === ah
-		ah.force_encoding(Encoding::UTF_8)
-	elsif BigDecimal === ah
-		format("%.2f", ah)
-	else
-		ah
-	end
 end

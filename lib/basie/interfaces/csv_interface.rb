@@ -4,7 +4,7 @@ require_relative "base_interface"
 #A CSV intrepreter for basie.
 class Basie::CSVInterface < Basie::Interface
 
-	def initialize(params={})
+	def initialize(params = {})
 		@root = "/csv"
 
 		#register the JSON mime type with the application.

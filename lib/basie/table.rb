@@ -164,20 +164,24 @@ class Basie::Table
 	## DATA HELPER FUNCTIONS
 
 	#helper function, which makes input hashes or arrays look nice.
-	def reformat_input(input)
+	def reformat_input(input, params = {})
 		#checks a list of rows, then massages the input to be compatible with the basie DB input.
 		case input
 		when Array
-			input.map {|data| reformat_input(data)}
+			input.map {|data| reformat_input(data, params)}
 		when Hash
 			temp = {}	#we can't do a map on the hash data type
 			input.each do |column, data|
 				csym = column.to_sym
-				if @columns.has_key?(csym)
-					temp[csym] = data
-				end
+
+				#check the reject parameter to see if our symbol is in the rejection list.
+				next if params[:reject] && params[:reject].include?(csym)
+
+				temp[csym] = data if @columns.has_key?(csym)
 			end
 			temp
+		else
+			raise ArgumentError, "input must be a hash or array of hashes"
 		end
 	end
 

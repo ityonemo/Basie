@@ -9,8 +9,8 @@ class Basie::JSONInterface < Basie::Interface
 
 		#register the JSON mime type with the application.
 		app.configure do
-  			app.mime_type :json, 'application/json'
-  		end
+  		app.mime_type :json, 'application/json'
+  	end
 
 		super(params)
 	end

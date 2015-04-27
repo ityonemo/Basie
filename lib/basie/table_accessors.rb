@@ -9,42 +9,48 @@ class Basie; end
 
 class Basie::Table
 
-	def process(r, params = {})
-		#make the suppress list
-		params[:suppresslist] ||= []
+	def process(r, suppresslist:[], keep_as_array: true, restore:nil)
+		#processes a hash, or array of hashes with the following options.
+		# suppresslist:  A list of keys to reject.
+		# preserve: Whether or not we should keep the structure an array if r is only one
+		# restore: A list of keys to accept even if they're in the suppresslist.
 
-		#adjust the suppress list based on any "restores"
-		_suppresslist = case params[:restore]
-		when nil
-			params[:suppresslist]
-		when :all
-			[]
-		when Symbol
-			#a single symbol, not ":all"
-			params[:suppresslist].reject{|s| s == params[:restore]}
-		when Array
-			#hopefully, an array of symbols (but it's not necessary, just other elements won't work)
-			params[:suppresslist].reject{|s| params[:restore].include? s}
-		else
-			raise ArgumentError, "suppresslist must be nil, :all, a symbol, or an array of symbols"
-		end
+		#process the input.
 
 		case r
 		when Array
+			#recursively forward the information.
 			case r.length
 			when 0
 				nil
 			when 1
-				if params[:preserve]
-					[process(r[0], params)]
+				if keep_as_array
+					[process(r[0], suppresslist:suppresslist, keep_as_array:false, restore:restore)]
 				else
 					#unpack the array
-					process(r[0], params)
+					process(r[0], suppresslist:suppresslist, keep_as_array:false, restore:restore)
 				end
 			else
-				r.map{|v| process(v, params)}
+				r.map{|v| process(v, suppresslist:suppresslist, keep_as_array:false, restore:restore)}
 			end
 		when Hash
+
+			#adjust the suppress list based on any "restores"
+			_suppresslist = case restore
+				when nil
+					suppresslist
+				when :all
+					[]
+				when Symbol
+					#a single symbol, not ":all"
+					suppresslist.reject{|s| s == restore}
+				when Array
+					#hopefully, an array of symbols (but it's not necessary, just other elements won't work)
+					suppresslist.reject{|s| restore.include? s}
+				else
+					raise ArgumentError, "suppresslist must be nil, :all, a symbol, or an array of symbols"
+				end
+
 			#then swap out the subscripted key for the normal key.
 			temp = {}
 			r.each_key do |k|
@@ -120,26 +126,26 @@ class Basie::Table
 		eval("lambda" + accessfilter).call(content)
 	end
 
-	def entire_table(params={})
+	def entire_table(override_security:false, session:nil, restore:[])
 		#returns the entire table as a ruby object.
 
 		#check to see if access is disallowed by the security parameters
-		accessfilter = params[:override_security] ? "" : select_access_string(params[:session])
+		accessfilter = override_security ? "" : select_access_string(session)
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		@basie.connect do |db|
 			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{accessfilter}").all,
-				:preserve => true,
+				:keep_as_array => true,
 				:suppresslist => @suppresslist,
-				:restore => params[:restore]
+				:restore => restore
 		end
 	end
 
-	def data_by_id(id, params={})
+	def data_by_id(id, override_security:false, session:nil, restore:[])
 		#returns the table data by row id (primary or hash key)
 
 		#check to see if access is disallowed by the security parameters
-		accessfilter = params[:override_security] ? "" : select_access_string(params[:session], :AND)
+		accessfilter = override_security ? "" : select_access_string(session, :AND)
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		#an object to store the result
@@ -177,15 +183,15 @@ class Basie::Table
 		end
 
 		#make it look nice and return the result.
-		process res, :suppresslist => @suppresslist, :restore => params[:restore]
+		process res, :suppresslist => @suppresslist, :restore => restore
 	end
 
-	def data_by_label(search, params={})
+	def data_by_label(search, override_security:false, restore:[], session:nil)
 		#check to see if this table has labels available.
 		raise Basie::LabelUnavailableError, "label not available for this table" unless @settings[:use_label]
 
 		#check to see if access is disallowed by the security parameters
-		accessfilter = params[:override_security] ? "" : select_access_string(params[:session], :AND)
+		accessfilter = override_security ? "" : select_access_string(session, :AND)
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		#generate the search column text
@@ -197,14 +203,15 @@ class Basie::Table
 		#connect to the database and then process the data.
 		process @basie.connect{|db| db.fetch(q).all},
 				:suppresslist => @suppresslist,
-			  :restore => params[:restore]
+			  :restore => restore,
+				:keep_as_array => false
 	end
 
-	def data_by_query(column, query, params={})
+	def data_by_query(column, query, override_security:false, restore:[], session:nil)
 		#returns table data by general column query
 
 		#check to see if access is disallowed by the security parameters.
-		accessfilter = params[:override_security] ? "" : select_access_string(params[:session], :AND)
+		accessfilter = override_security ? "" : select_access_string(session, :AND)
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		#generate the search column text
@@ -213,25 +220,27 @@ class Basie::Table
 		#connect to the database and process the data.
 		process @basie.connect {|db| db.fetch(q).all},
 			    :suppresslist => @suppresslist,
-			    :restore => params[:restore]
+			    :restore => restore,
+					:keep_as_array => false
 	end
 
-	def insert_data(data, params = {})
+	def insert_data(data, override_security:false, session:nil)
 		#runs a basic insert on variadic (Array/Hash) data
 		#in the case of an array, it should be a series of input-ok hashes
 		#in the case of a hash, it should be key/value pairs that correspond to
 		#column/data.
+
 		case (data)
 		when Array
 			#if it's an array, it's more than one data hashes.
 			@basie.connect do |db|
 				data.each do |datum|
 					#filter our data based on security preferences
-					datum = params[:override_securty] ? datum : access_filter_input_hash(params[:session], datum)
+					datum = override_security ? datum : access_filter_input_hash(session, datum)
 
 					raise SecurityError, "access disallowed" unless datum
 
-					datum.reject!{|col, val| c = col.to_sym; (!@columns.has_key?(c) || c == :id || c == :hash)}
+					datum = reformat_input(datum, :reject => [:id, :hash])
 
 					#actually insert the data, then brand the data if necessary
 					id = db[@name].insert(datum)
@@ -242,30 +251,32 @@ class Basie::Table
 			basie.connect do |db|
 				#filter our data based on security preferences
 
-				data = params[:override_security] ? data : access_filter_input_hash(params[:session], data)
+				data = override_security ? data : access_filter_input_hash(session, data)
 				raise SecurityError, "access disallowed" unless data
 
-				data.reject!{|col, val| c = col.to_sym; (!@columns.has_key?(c) || c == :id || c == :hash)}
+				data = reformat_input(data, :reject => [:id, :hash])
 
 				#actually insert the data, then brand the data, if necessary
 				id = db[@name].insert(data)
+
 				brandhash(id)
 			end
-		else raise ArgumentError, "insert_data must take an Array or Hash"
+		else
+			raise ArgumentError, "insert_data must take an Array or Hash"
 		end
 	end
 
-	def update_data(id, data, params = {})
+	def update_data(id, data, override_security:false, session:nil)
 		#a basic update should be a single item.
 
 		#create a placeholder variable for the result.
 		res = nil
 
 		#filter the input hash, and throw an error if write is disallowed.
-		data = params[:override_security] ? data : access_filter_input_hash(params[:session], data)
+		data = override_security ? data : access_filter_input_hash(session, data)
 		raise SecurityError, "access disallowed" unless data
 
-		data.reject!{|col, val| c = col.to_sym; (!@columns.has_key?(c) || c == :id || c == :hash)}
+		data = reformat_input(data, :reject => [:id, :hash])
 
 		if (is_hash?(id))
 			#hashes to hashes

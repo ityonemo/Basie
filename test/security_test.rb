@@ -77,13 +77,13 @@ class SecurityTest < Test::Unit::TestCase
 
     original_data = $BS.tables[:securitydata].entire_table(:override_security => true)
     #test writing a data entry
-    post "/db/securitydata", :params => {"data":4,"owner":1}
+    post "/db/securitydata", :params => {"data" => 4,"owner" => 1}
     assert_equal 403, last_response.status
     #double check the integrity of the table.
     assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
 
     #test replacing a data entry
-    post "/db/securitydata/gHroYdCkdch8", :params => {"data":4,"owner":1}
+    post "/db/securitydata/gHroYdCkdch8", :params => {"data" => 4,"owner" => 1}
     assert_equal 403, last_response.status
     #double check the integrity of the table.
     assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
@@ -137,7 +137,7 @@ class SecurityTest < Test::Unit::TestCase
     original_data = $BS.tables[:securitydata].entire_table(:override_security => true)
 
     #an adversarial test showing that this security scheme can have a problem.
-    post "/db/securitydata", :params => {"data":4,"owner":1}
+    post "/db/securitydata", :params => {"data" => 4,"owner" => 1}
     assert last_response.success?
 
     assert_not_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
@@ -148,7 +148,7 @@ class SecurityTest < Test::Unit::TestCase
       if x == :public
         {:read => nil, :write => "{|l| nil}"}
       else
-        {:read => "owner = #{x[:id]}", :write => "{|l| return nil if l[:owner] != #{x[:id]}; l[:owner] = #{x[:id]}; l}"}
+        {:read => "owner = #{x[:id]}", :write => "{|l| l[:owner] = #{x[:id]}; l}"}
       end
     end
 
@@ -164,7 +164,7 @@ class SecurityTest < Test::Unit::TestCase
     assert last_response.ok?
 
     #now, get the list
-    post '/db/securitydata', :params => {"data":4,"owner":2}
+    post '/db/securitydata', :params => {"data" => 4,"owner" => 2}
     assert_equal 403, last_response.status
 
     #logout
@@ -176,7 +176,7 @@ class SecurityTest < Test::Unit::TestCase
     assert last_response.ok?
 
     #check to make sure matching params to the user works.
-    post '/db/securitydata', :params => {"data":4,"owner":2}
+    post '/db/securitydata', :params => {"data" => 4,"owner" => 2}
     puts last_response.body
     puts last_response.status
     assert last_response.success?
