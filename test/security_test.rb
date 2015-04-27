@@ -138,9 +138,7 @@ class SecurityTest < Test::Unit::TestCase
 
     #an adversarial test showing that this security scheme can have a problem.
     post "/db/securitydata", :params => {"data":4,"owner":1}
-    puts last_response.status
-    puts last_response.body
-    assert last_response.ok?
+    assert last_response.success?
 
     assert_not_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
   end
@@ -150,7 +148,7 @@ class SecurityTest < Test::Unit::TestCase
       if x == :public
         {:read => nil, :write => "{|l| nil}"}
       else
-        {:read => "owner = #{x[:id]}", :write => "{|l| l[:owner] = #{x[:id]}; l}"}
+        {:read => "owner = #{x[:id]}", :write => "{|l| return nil if l[:owner] != #{x[:id]}; l[:owner] = #{x[:id]}; l}"}
       end
     end
 
@@ -166,9 +164,8 @@ class SecurityTest < Test::Unit::TestCase
     assert last_response.ok?
 
     #now, get the list
-    get '/json/securitydata'
-    assert last_response.ok?
-    assert_equal File.new("./results/securitydata-user1.json").read, last_response.body
+    post '/db/securitydata', :params => {"data":4,"owner":2}
+    assert_equal 403, last_response.status
 
     #logout
     get '/logout'
@@ -178,10 +175,16 @@ class SecurityTest < Test::Unit::TestCase
     post "/login", params = {:login => "user 2", :password => "user 2 pass"}
     assert last_response.ok?
 
+    #check to make sure matching params to the user works.
+    post '/db/securitydata', :params => {"data":4,"owner":2}
+    puts last_response.body
+    puts last_response.status
+    assert last_response.success?
+
     #now, get the list
     get '/json/securitydata'
-    assert last_response.ok?
-    assert_equal File.new("./results/securitydata-user2.json").read, last_response.body
+    puts last_response.body
+
   end
 
 end

@@ -228,7 +228,10 @@ class Basie::Table
 				data.each do |datum|
 					#filter our data based on security preferences
 					datum = params[:override_securty] ? datum : access_filter_input_hash(params[:session], datum)
+
 					raise SecurityError, "access disallowed" unless datum
+
+					datum.reject!{|col, val| c = col.to_sym; (!@columns.has_key?(c) || c == :id || c == :hash)}
 
 					#actually insert the data, then brand the data if necessary
 					id = db[@name].insert(datum)
@@ -240,8 +243,9 @@ class Basie::Table
 				#filter our data based on security preferences
 
 				data = params[:override_security] ? data : access_filter_input_hash(params[:session], data)
-
 				raise SecurityError, "access disallowed" unless data
+
+				data.reject!{|col, val| c = col.to_sym; (!@columns.has_key?(c) || c == :id || c == :hash)}
 
 				#actually insert the data, then brand the data, if necessary
 				id = db[@name].insert(data)
@@ -260,6 +264,8 @@ class Basie::Table
 		#filter the input hash, and throw an error if write is disallowed.
 		data = params[:override_security] ? data : access_filter_input_hash(params[:session], data)
 		raise SecurityError, "access disallowed" unless data
+
+		data.reject!{|col, val| c = col.to_sym; (!@columns.has_key?(c) || c == :id || c == :hash)}
 
 		if (is_hash?(id))
 			#hashes to hashes
