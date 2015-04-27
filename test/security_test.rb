@@ -58,7 +58,7 @@ class SecurityTest < Test::Unit::TestCase
     #and logged in parties to have full access
     public_restrict = lambda do |x, t|
       if x == :public
-        {:read => nil, :write => "nil"}
+        {:read => nil, :write => "{|l| nil}"}
       else
         {:read => "", :write => "{|l| l}"}
       end
@@ -89,6 +89,99 @@ class SecurityTest < Test::Unit::TestCase
     assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
 
     #test using CSV
+    post '/csv/securitydata', 'securitydata' => Rack::Test::UploadedFile.new('results/securityappend.csv', 'text/csv')
+    assert_equal 403, last_response.status
+    #double check the integrity of the table.
+    assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
+  end
+
+  def test_restricting_read_based_on_user_id
+    user_restrict = lambda do |x, t|
+      if x == :public
+        {:read => nil, :write => "{|l| nil}"}
+      else
+        {:read => "owner = #{x[:id]}", :write => "{|l| l}"}
+      end
+    end
+
+    $BS.set_access_generator(user_restrict)
+
+    create [:usertest, :securitydata]
+
+    #make sure that with the new protocol we still get 403s without login
+    test403s("/json")
+
+    #now, login.
+  	post '/login', params = {:login => "user 1", :password => "user 1 pass"}
+  	assert last_response.ok?
+
+    #now, get the list
+    get '/json/securitydata'
+    assert last_response.ok?
+    assert_equal File.new("./results/securitydata-user1.json").read, last_response.body
+
+    #logout
+    get '/logout'
+    assert last_response.ok?
+
+    #login, as user 2
+    post "/login", params = {:login => "user 2", :password => "user 2 pass"}
+    assert last_response.ok?
+
+    #now, get the list
+    get '/json/securitydata'
+    assert last_response.ok?
+    assert_equal File.new("./results/securitydata-user2.json").read, last_response.body
+
+    #store the original data
+    original_data = $BS.tables[:securitydata].entire_table(:override_security => true)
+
+    #an adversarial test showing that this security scheme can have a problem.
+    post "/db/securitydata", :params => {"data":4,"owner":1}
+    puts last_response.status
+    puts last_response.body
+    assert last_response.ok?
+
+    assert_not_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
+  end
+
+  def test_restricting_write_based_on_user_id
+    user_restrict = lambda do |x, t|
+      if x == :public
+        {:read => nil, :write => "{|l| nil}"}
+      else
+        {:read => "owner = #{x[:id]}", :write => "{|l| l[:owner] = #{x[:id]}; l}"}
+      end
+    end
+
+    $BS.set_access_generator(user_restrict)
+
+    create [:usertest, :securitydata]
+
+    #make sure that with the new protocol we still get 403s without login
+    test403s("/json")
+
+    #now, login.
+    post '/login', params = {:login => "user 1", :password => "user 1 pass"}
+    assert last_response.ok?
+
+    #now, get the list
+    get '/json/securitydata'
+    assert last_response.ok?
+    assert_equal File.new("./results/securitydata-user1.json").read, last_response.body
+
+    #logout
+    get '/logout'
+    assert last_response.ok?
+
+    #login, as user 2
+    post "/login", params = {:login => "user 2", :password => "user 2 pass"}
+    assert last_response.ok?
+
+    #now, get the list
+    get '/json/securitydata'
+    assert last_response.ok?
+    assert_equal File.new("./results/securitydata-user2.json").read, last_response.body
   end
 
 end

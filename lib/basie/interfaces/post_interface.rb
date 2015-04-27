@@ -32,9 +32,12 @@ class Basie::POSTInterface < Basie::Interface
 			p = params.reject{|col, val| c = col.to_sym; (!table.columns.has_key?(c) || c == :id || c == :hash)}
 
 			begin
+
 				table.update_data(id, p, :session => session)
+
 				201
 			rescue SecurityError
+
 				403
 			rescue ArgumentError
 				400

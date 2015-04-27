@@ -51,9 +51,8 @@ class Basie::CSVInterface < Basie::Interface
 
 				rowhash = {}
 
-				(0..columnnames.length - 1).each do |idx|
-					rowhash[columnnames[idx]] = row[idx]
-				end
+				(0..columnnames.length - 1).each {|idx|	rowhash[columnnames[idx]] = row[idx]}
+
 				output << rowhash
 			end
 
@@ -132,23 +131,27 @@ class Basie::CSVInterface < Basie::Interface
 				#save the parameter that has file info.
 				dparam = params[table.name]
 				#check to make sure we have a well-formed input here
-				unless dparam
-					#TODO:  Double check that this error code is correct.
-					return 400
-				end
-				unless dparam[:type] == "text/csv"
-					#TODO:  Set the error correctly here to reflect HTML type rejection.
-					return 400
-				end
+
+
+				#TODO:  Double check that this error code is correct.
+				return 400 unless dparam
+
+				#TODO:  Set the error correctly here to reflect HTML type rejection.
+				return 400 unless dparam[:type] == "text/csv"
 
 				#parse the tempfile into a basie-compatible object
 				rowlist = Basie::CSVInterface.array_from_csv(dparam[:tempfile])
 
 				a = table.reformat_input(rowlist)
 
-				table.insert_data(a, :session => session)
+				begin
+					table.insert_data(a, :session => session)
 
-				200
+					200
+				rescue SecurityError
+					403
+				end
+
 			end
 		end
 	end
