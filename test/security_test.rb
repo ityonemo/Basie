@@ -77,13 +77,13 @@ class SecurityTest < Test::Unit::TestCase
 
     original_data = $BS.tables[:securitydata].entire_table(:override_security => true)
     #test writing a data entry
-    post "/db/securitydata", :params => {"data" => 4,"owner" => 1}
+    post "/db/securitydata", params = {"data" => 4,"owner" => 1}
     assert_equal 403, last_response.status
     #double check the integrity of the table.
     assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
 
     #test replacing a data entry
-    post "/db/securitydata/gHroYdCkdch8", :params => {"data" => 4,"owner" => 1}
+    post "/db/securitydata/gHroYdCkdch8", params = {"data" => 4,"owner" => 1}
     assert_equal 403, last_response.status
     #double check the integrity of the table.
     assert_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
@@ -100,7 +100,7 @@ class SecurityTest < Test::Unit::TestCase
       if x == :public
         {:read => nil, :write => "{|l| nil}"}
       else
-        {:read => "owner = #{x[:id]}", :write => "{|l| l}"}
+        {:read => "securitydata.owner = '#{x[:id]}'", :write => "{|l| l}"}
       end
     end
 
@@ -129,18 +129,23 @@ class SecurityTest < Test::Unit::TestCase
     assert last_response.ok?
 
     #now, get the list
+
     get '/json/securitydata'
     assert last_response.ok?
     assert_equal File.new("./results/securitydata-user2.json").read, last_response.body
 
-    #store the original data
-    original_data = $BS.tables[:securitydata].entire_table(:override_security => true)
+    get '/json/securitydata'
+    old_response = last_response.body
 
     #an adversarial test showing that this security scheme can have a problem.
-    post "/db/securitydata", :params => {"data" => 4,"owner" => 1}
+    post "/db/securitydata", params = {"data" => 4,"owner" => 1}
     assert last_response.success?
 
-    assert_not_equal original_data, $BS.tables[:securitydata].entire_table(:override_security => true)
+    get '/json/securitydata'
+    assert last_response.ok?
+    assert_equal old_response, last_response.body
+    #note that this is correct (as defined) but generally a poor choice
+    #becaues you don't want owner 2 to be able to write an item with owner 1
   end
 
   def test_restricting_write_based_on_user_id
@@ -148,7 +153,7 @@ class SecurityTest < Test::Unit::TestCase
       if x == :public
         {:read => nil, :write => "{|l| nil}"}
       else
-        {:read => "owner = #{x[:id]}", :write => "{|l| l[:owner] = #{x[:id]}; l}"}
+        {:read => "owner = #{x[:id]}", :write => "{|l| l['owner'] = #{x[:id]}; l}"}
       end
     end
 
@@ -163,9 +168,15 @@ class SecurityTest < Test::Unit::TestCase
     post '/login', params = {:login => "user 1", :password => "user 1 pass"}
     assert last_response.ok?
 
-    #now, get the list
-    post '/db/securitydata', :params => {"data" => 4,"owner" => 2}
-    assert_equal 403, last_response.status
+    #attempt to post data with adversarial owner data that will be rebranded.
+    post '/db/securitydata', params = {"data" => 4,"owner" => 1}
+    assert last_response.success?
+
+    #now, get the full data
+    get '/json/securitydata'
+    assert last_response.ok?
+    assert_equal File.new("./results/securitydata-appendone.json").read,
+      last_response.body
 
     #logout
     get '/logout'
@@ -176,15 +187,14 @@ class SecurityTest < Test::Unit::TestCase
     assert last_response.ok?
 
     #check to make sure matching params to the user works.
-    post '/db/securitydata', :params => {"data" => 4,"owner" => 2}
-    puts last_response.body
-    puts last_response.status
+    post '/db/securitydata', params = {"data" => 5,"owner" => 1}
     assert last_response.success?
 
     #now, get the list
     get '/json/securitydata'
-    puts last_response.body
-
+    assert last_response.ok?
+    assert_equal File.new("./results/securitydata-appendtwo.json").read,
+      last_response.body
   end
 
 end

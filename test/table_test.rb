@@ -133,7 +133,9 @@ class TableTest < Test::Unit::TestCase
     $BS.connect{|db| db.drop_table? :simpletest}
     $BS.create :simpletest
     $BS.tables[:simpletest].insert_data({:test => "one"}, :override_security => true)
+    puts "hi mom"
     assert_equal [{:id=>1, :test=>"one"}], $BS.tables[:simpletest].entire_table(:override_security => true)
+    puts "hello"
   end
 
   def test_insert_data_array

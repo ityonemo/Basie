@@ -43,6 +43,8 @@ class Basie::JSONInterface < Basie::Interface
 					table.entire_table(:session => session).to_json
 				rescue SecurityError
 					403
+				rescue => e
+					puts e.inspect
 				end
 			end
 		end

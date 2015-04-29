@@ -105,12 +105,13 @@ class Basie::Table
 		return nil unless access
 
 		#now we need to stitch the appropriate connector in here
-		unless access == ""
+		if access == ""
+			access
+		else
 			#useful/valid connectors are WHERE or AND, note MySQL is not case sensitive
 			#so a lower-case one is just peachy keen.
-			access.prepend("#{connector} ")
+			"#{connector} #{access}"
 		end
-		access
 	end
 
 	def access_filter_input_hash(session, content)
@@ -134,7 +135,9 @@ class Basie::Table
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		@basie.connect do |db|
-			process db.fetch("SELECT #{csel} FROM #{@name} #{select_modifier_string} #{accessfilter}").all,
+			q = "SELECT #{csel} FROM #{@name} #{select_modifier_string} #{accessfilter}"
+
+			process db.fetch(q).all,
 				:keep_as_array => true,
 				:suppresslist => @suppresslist,
 				:restore => restore

@@ -17,9 +17,6 @@ class Basie::POSTInterface < Basie::Interface
 			#toss out parameters that aren't the ones we care about.  Also drop out :id and :hash parameters in case of adversarial attempts
 
 			begin
-
-				puts params.inspect
-
 				table.insert_data(params, :session => session)
 				201
 			rescue SecurityError

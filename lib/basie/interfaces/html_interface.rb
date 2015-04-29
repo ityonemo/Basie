@@ -14,8 +14,6 @@ class Basie::HTMLInterface < Basie::Interface
 		#parameters has to be a class variable because it will be accessed
 		#by some universal converter functions.  This is OK, though, because
 		#basie interfaces are singletons.  consider fixing this to be less hacky.
-
-		puts params
 		
 		@@params = params
 	end
