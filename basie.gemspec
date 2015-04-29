@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name    = 'basie'
-  s.version = '0.0.2'
+  s.version = '0.0.5'
   s.summary = 'A gem that enhances Sinatra with DB support'
 
   s.author   = 'Isaac Yonemoto'
