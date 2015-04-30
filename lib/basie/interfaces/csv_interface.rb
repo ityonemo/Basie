@@ -91,13 +91,14 @@ class Basie::CSVInterface < Basie::Interface
 			app.get (tableroot + '/:id') do |id|
 				begin
 					content_type :csv
+
 					res = table.data_by_id(id, :session => session)
 					Basie::CSVInterface.to_csv(res)
 				rescue SecurityError
 					403
 				rescue ArgumentError
 					400
-				rescue Basie::NoEntryError
+				rescue Basie::NoEntryError => e
 					404
 				end
 			end

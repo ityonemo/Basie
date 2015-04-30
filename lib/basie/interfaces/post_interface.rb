@@ -39,7 +39,6 @@ class Basie::POSTInterface < Basie::Interface
 			rescue Basie::NoHashError, Basie::NoIdError
 				404
 			rescue => e
-				puts e.inspect
 				throw
 			end
 		end

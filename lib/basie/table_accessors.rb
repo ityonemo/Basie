@@ -184,7 +184,6 @@ class Basie::Table
 		else
 			raise Basie::HashError, "malformed hash"
 		end
-
 		#make it look nice and return the result.
 		process res, :suppresslist => @suppresslist, :restore => restore
 	end
@@ -210,7 +209,7 @@ class Basie::Table
 				:keep_as_array => false
 	end
 
-	def data_by_query(column, query, override_security:false, restore:[], session:nil)
+	def data_by_query(colstring, qrystring, override_security:false, restore:[], session:nil)
 		#returns table data by general column query
 
 		#check to see if access is disallowed by the security parameters.
@@ -218,7 +217,7 @@ class Basie::Table
 		raise SecurityError, "access disallowed" unless accessfilter
 
 		#generate the search column text
-		q = "SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{column} = '#{query}' #{accessfilter}"
+		q = "SELECT #{csel} from #{@name} #{select_modifier_string} WHERE #{colstring} = '#{qrystring}' #{accessfilter}"
 
 		#connect to the database and process the data.
 		process @basie.connect {|db| db.fetch(q).all},

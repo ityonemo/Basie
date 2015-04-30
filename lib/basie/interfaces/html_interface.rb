@@ -14,7 +14,7 @@ class Basie::HTMLInterface < Basie::Interface
 		#parameters has to be a class variable because it will be accessed
 		#by some universal converter functions.  This is OK, though, because
 		#basie interfaces are singletons.  consider fixing this to be less hacky.
-		
+
 		@@params = params
 	end
 
@@ -257,6 +257,7 @@ class Basie::HTMLInterface < Basie::Interface
 
 				#get the data
 				begin
+
 					res = table.data_by_id(query, :session => session)
 
 					haml Basie::HTMLInterface.to_dl(res, table)
@@ -272,10 +273,10 @@ class Basie::HTMLInterface < Basie::Interface
 
 		#register a path for querying
 		route_check(:query) do
-			app.get(tableroot + "/:column/:query") do |column, query|
+			app.get(tableroot + "/:cstr/:qry") do |cstr, qry|
 				#get the data
 				begin
-					res = table.data_by_query(column, query, :session => session)
+					res = table.data_by_query(cstr, qry, :session => session)
 					case res
 					when Array
 						return 404 if res.length == 0

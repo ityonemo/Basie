@@ -1,5 +1,6 @@
 #BASIE.rb
 #contains the Basie class which handles most of the database-related things.
+require 'tilt/haml'
 require 'sequel'
 require 'sinatra'
 require 'stringio'
