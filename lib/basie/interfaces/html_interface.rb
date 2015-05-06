@@ -7,6 +7,7 @@ class Basie::HTMLInterface < Basie::Interface
 	def initialize(params={})
 		@root = "/html"
 		@formroot = params[:formroot] || "/htmlform"
+		@multiformroot = params[:multiformroot] || "/htmlmultiform"
 		params[:formroot] = params[:formroot] || @formroot
 
 		super(params)
@@ -179,6 +180,35 @@ class Basie::HTMLInterface < Basie::Interface
 		o
 	end
 
+	def self.to_mfr(table)
+		#note that this uses extensive 'internally-hosted' javascript.  Also, this isn't jQuery-dependent.
+		substitution = {}
+
+		names = table.columns.keys.reject{|k| table.suppresslist.include? k}.map{|k| k.to_s}
+		titles = names.map{|name| substitution[name] || name}
+		types = table.columns.values.map{|c| c.params[:htag]}
+
+%(:javascript
+	var input_titles = #{titles.to_json};
+	var input_names = #{names.to_json};
+	var input_types = #{types.to_json};
+
+%form
+	%label(for="#{table.name}count")
+		number of #{table.name}
+	%input##{table.name}count(name="#{table.name}count" type="number" min="1" step="1" value="1")
+
+	%table##{table.name}table
+		%thead##{table.name}titles
+		%tbody##{table.name}data
+
+	%input(type="submit")
+
+:javascript
+#{Basie::HTMLInterface.mlfhtml(table.name)}
+)
+	end
+
 	##########################################################################
 	## PARSING OPTIONS IN THE TABLE
 
@@ -306,5 +336,84 @@ class Basie::HTMLInterface < Basie::Interface
 				haml Basie::HTMLInterface.to_if(table, res)
 			end
 		end
+
+		#create a path for a multiple data form.
+		route_check(:multiform) do
+			multiformroot = "#{@multiformroot}/#{table.name}"
+
+			app.get (multiformroot) do
+				haml Basie::HTMLInterface.to_mfr(table)
+			end
+		end
+	end
+end
+
+################################################################################
+## THIS IS WHERE WE STORE THE JAVASCRIPT.
+
+class Basie::HTMLInterface
+	def self.mlfhtml(tname)
+%(
+	window.addEventListener("load", initialize);
+	document.getElementById("#{tname}count").addEventListener("change", matchcount);
+	//we expect the following variables to be set elsewhere in the script.
+	//input_titles (Array of strings, determines the labels)
+	//input_names (Array of strings, determines the names)
+	//input_types (Array, determines the input field types)
+	//these two arrays should have the same number of indices, but the templating
+	//procedure will use the names array.
+
+	function initialize(){
+		headerline();
+		matchcount();
+	}
+
+	function countrows(){
+		return document.getElementById("#{tname}data").children.length
+	}
+
+	function matchcount(){
+		var count = parseInt(document.getElementById("#{tname}count").value)
+
+		if (count < countrows()){
+			//nuke the rows that are too many.
+			for (var idx = countrows()-1; idx >= count; idx--){
+				var oldrow = document.getElementById("rowindex" + idx);
+				document.getElementById("#{tname}data").removeChild(oldrow);
+			}
+		}
+		else if (count > countrows()){
+			//add rows
+			for (var idx = countrows(); idx < count; idx++){
+				var newrow = document.createElement("tr");
+				newrow.id = "rowindex" + idx;
+				newrow.innerHTML = bodyline(idx);
+				document.getElementById("#{tname}data").appendChild(newrow);
+			}
+		}
+	}
+
+	function headerline(){
+		//scan through the input names array
+		var thline = "";
+		for (var jdx = 0; jdx < input_titles.length; jdx++){
+			thline += "<th>" + input_titles[jdx] + "</th>";
+		}
+
+		var headrow = document.createElement("tr")
+		headrow.innerHTML = thline;
+		document.getElementById("#{tname}titles").appendChild(headrow);
+	}
+
+	function bodyline(idx){
+		//scan through the input names array
+		var tdline = "";
+		for (var jdx = 0; jdx < input_names.length; jdx++){
+			tdline += "<td><input name='" + input_names[jdx] + "'" +
+			(input_types[jdx] ? " type='" + input_types[jdx] + "'": "") + "></input></td>";
+		}
+		return tdline;
+	}
+)
 	end
 end

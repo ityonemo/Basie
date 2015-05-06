@@ -32,7 +32,6 @@ class Basie::POSTInterface < Basie::Interface
 
 				201
 			rescue SecurityError
-
 				403
 			rescue ArgumentError
 				400
